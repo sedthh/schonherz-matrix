@@ -1,0 +1,14 @@
+- Ikonok a menü elemek mellé:
+self.read_menu.add_command(label='First Page', underline=0, image=self.read_first_image, compound=tk.LEFT,
+                           command=self.menu_read_first, accelerator='Home', state=tk.DISABLED)
+- Több szintû visszavonás (elõrelépés gomb hozzáadása)
+- Másolás/Kivágás/Beillesztés vágólapról
+- Egyéb formátumok kezelése beillesztésnél
+- Régi szerkesztõ fájljainak megnyitása vagy import
+- Lasso tool és másolás/kivágás/beillesztés
+- Motion tweenek létrehozása
+- Nyelvi fájl (labelek betöltése kívülrõl)
+- Mac kompatibilitás
+- Betütípusok és szöveg
+- Kép importálás és konvertálás
+

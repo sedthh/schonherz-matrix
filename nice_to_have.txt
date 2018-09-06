@@ -10,5 +10,9 @@ self.read_menu.add_command(label='First Page', underline=0, image=self.read_firs
 - Nyelvi fájl (labelek betöltése kívülrõl)
 - Mac kompatibilitás
 - Betütípusok és szöveg
-- Kép importálás és konvertálás
-
+- Kép importálás és konvertálás, különbözõ átméretezési módokkal
+- Utoljára megnyitott fájlok listázása
+- Több layer és blending mode-ok
+- Átméretezhetõ GUI elemek
+- Állítható stílusok a szerkesztõben
+- Importálható klippek, fájlok összevágása

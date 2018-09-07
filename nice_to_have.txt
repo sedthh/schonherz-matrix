@@ -1,18 +1,30 @@
-- Ikonok a menü elemek mellé:
-self.read_menu.add_command(label='First Page', underline=0, image=self.read_first_image, compound=tk.LEFT,
-                           command=self.menu_read_first, accelerator='Home', state=tk.DISABLED)
-- Több szintû visszavonás (elõrelépés gomb hozzáadása)
-- Másolás/Kivágás/Beillesztés vágólapról
-- Egyéb formátumok kezelése beillesztésnél
-- Régi szerkesztõ fájljainak megnyitása vagy import
-- Lasso tool és másolás/kivágás/beillesztés
-- Motion tweenek létrehozása
-- Nyelvi fájl (labelek betöltése kívülrõl)
-- Mac kompatibilitás
-- Betütípusok és szöveg
-- Kép importálás és konvertálás, különbözõ átméretezési módokkal
-- Utoljára megnyitott fájlok listázása
-- Több layer és blending mode-ok
-- Átméretezhetõ GUI elemek
-- Állítható stílusok a szerkesztõben
-- Importálható klippek, fájlok összevágása
+Az alábbi funkciók várhatók még a következõ verziókban:
+- Bõvebb dokumentáció és kommentelt kódrészletek. 
+- Utoljára megnyitott fájlok listázása.
+- Mappák megjegyzése mentés/megnyitás/exportálás után.
+- Nyelvi fájlok használata, hogy más nyelveken is elérhetõ legyen az alkalmazás.
+- Témák választása a szerkesztõben. 
+- Átméretezhetõ GUI elemek.
+- Több szintû visszavonás/elõrelépés.
+- Másolás, kivágás és beillesztés külsõ vágólapról. 
+- Több képkocka együttes kijelölésének engedélyezése.
+- Ikonok hozzáadása a menü elemek mellé.
+- Hangsáv képének megjelenítése a szerkesztõben. 
+- Futtatható exe fájlok és egyéb csomagok létrehozása Windows, MacOs és Linux rendszerekhez.
+- Automatikus frissítés újabb verzióra.
+
+Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
+- Több layer hozzáadása.
+- Layer blending mode-ok implementálása (lighten, darken, stb.)
+- Alfa csatorna (átlátszóság) hozzáadása.
+- Lasszó eszköz a képkocka részeinek kijelöléséhez és kivágás/másolás/beillesztéséhez.
+- Szöveg hozzáadás és betütípusok kiválasztása.
+- Képek importálása és különbözõ konvertálási/átméretezési módok lehetõvé tétele.
+- Egyéb, külsõ formátumok lekezelése vágólapról való beillesztésnél.
+- Transition animációs funkció képkockák között. 
+- Régi animációk importálásának lehetõsége.
+- Összefûzési lehetõség más animációk egymásba importálásával.
+- Elõnézetnél a színprofilok figyelembe vétele és a valóságban elérhetõ LED színek szimulációja. 
+- Elõnézetnél a LED falak hibáinak és zajának szimulálása.
+
+Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 

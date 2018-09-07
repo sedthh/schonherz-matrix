@@ -4,6 +4,12 @@ import sys, os
 import json
 import webbrowser
 import time
+import codecs
+
+import numpy as np
+import asyncio
+import threading
+from pygame import mixer
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -13,7 +19,8 @@ from tkinter.colorchooser import askcolor
 
 ### GLOBALS
 
-TITLE		= "QPY - Animáció Szerkesztő"
+TITLE		= "QPY"
+NAME		= "QPY Animáció Szerkesztő"
 VERSION		= "0.1.0 alfa"
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
@@ -40,6 +47,11 @@ LAYOUT		= {
 		"layer"				: "#dddddd",
 		"layer-active"		: "#bbccdd",
 		"layer-color"		: "#222222",
+		"layer-offset"		: 30,
+		"layer-height"		: 50,
+		"frame-width"		: 10,
+		"frame-active"		: "#AA0000",
+		"frame-color"		: "#e0e0e0",
 	}
 }
 
@@ -50,6 +62,10 @@ class Application(tk.Frame):
 		self.root			= master
 		super().__init__(self.root)
 		self.version		= [int(v) for v in VERSION.split()[0].split(".")]
+		self.loop 			= asyncio.get_event_loop()
+		self.width			= 800
+		self.height			= 600
+		self.state			= self.root.wm_state()
 		
 		self.changes_made	= False
 		self.is_playing		= False
@@ -58,8 +74,7 @@ class Application(tk.Frame):
 		self.animation		= self.new_animation() # animation data
 					
 		# generate editor window
-		self.root.title(TITLE+" ("+VERSION+")")
-		self.root.minsize(800,600)
+		self.root.minsize(self.width,self.height)
 		self.root.configure(background=LAYOUT["DEFAULT"]["root"])
 		self.root.protocol("WM_DELETE_WINDOW", self.file_quit)
 		
@@ -71,16 +86,14 @@ class Application(tk.Frame):
 			#color	= askcolor(initialcolor="#FF00FF")
 		except Exception as e:
 			self.error("Nem sikerült létrehozni a menüelemeket!",e)
-		try:
-			self.render_layers()
-			self.render_frames()
-		except Exception as e:
-			self.error("Sikertelen az elemek kirajzolása!",e)
 		
+		self.render(True)
 		self.root.bind("<Configure>", self.on_resize)
+		self.log("Alkalmazás készen áll")
 	
 	def new_animation(self):
-		data	= {
+		data				= {
+			"header"			: "QPY",
 			"version"			: self.version,
 			"stage"				: PROFILES["SCH"],
 			"properties"		: {
@@ -95,20 +108,20 @@ class Application(tk.Frame):
 		}
 		# TODO: allow the manual addition of multiple layers later
 		for layer in ["Felső réteg","Középső réteg","Hátsó réteg"]:
-			frames			= []
+			frames				= []
 			for w in range(data["stage"]["width"]):
-				line			= []
+				line				= []
 				for h in range(data["stage"]["height"]):
 					line.append(0)
 				frames.append(line)
 			data["timeline"].append({
-				"name"				: layer,
-				"type"				: "normal",
-				"visibility"		: True,
-				"render"			: True,
-				"frames"			: [{
-					"type"				: "empty",
-					"data"				: frames
+				"name"					: layer,
+				"type"					: "normal",
+				"visibility"			: True,
+				"render"				: True,
+				"frames"				: [{
+					"type"					: "empty",
+					"data"					: frames
 				}]
 			})
 		return data
@@ -159,11 +172,14 @@ class Application(tk.Frame):
 		self.root.bind_all("<Control-r>", self.edit_empty)
 		self.edit_menu.add_command(label = "Képkocka duplikálása", command = self.edit_duplicate, underline=1,accelerator="Ctrl+D")
 		self.root.bind_all("<Control-d>", self.edit_duplicate)
+		self.root.bind_all("<F6>", self.edit_duplicate)
 		self.edit_menu.add_command(label = "Üres képkocka beszúrása", command = self.edit_insert_empty, underline=1,accelerator="Ctrl+E")
 		self.root.bind_all("<Control-e>", self.edit_insert_empty)
+		self.root.bind_all("<F7>", self.edit_insert_empty)
 		self.edit_menu.add_separator()
 		self.edit_menu.add_command(label = "Képkocka hosszabbítása", command = self.edit_extend, underline=1,accelerator="+")
 		self.root.bind_all("<Key-plus>", self.edit_extend)
+		self.root.bind_all("<F5>", self.edit_extend)
 		self.edit_menu.add_command(label = "Képkocka rövidítése", command = self.edit_reduce, underline=1,accelerator="-")
 		self.root.bind_all("<Key-minus>", self.edit_reduce)
 		
@@ -199,8 +215,8 @@ class Application(tk.Frame):
 		self.root.bind_all("<Prior>", self.playback_next)
 
 		self.help_menu		= tk.Menu(self.menubar, tearoff=0)
-		self.help_menu.add_command(label = "Névjegy", command = self.other_about,underline=1,accelerator="Ctrl+H")
-		self.root.bind_all("<Control-h>", self.other_about)
+		self.help_menu.add_command(label = "Névjegy", command = self.other_about,underline=1,accelerator="F1")
+		self.root.bind_all("<F1>", self.other_about)
 		
 		self.menubar.add_cascade(label = "Fájl", menu=self.file_menu)
 		self.menubar.add_cascade(label = "Szerkesztés", menu=self.edit_menu)
@@ -219,6 +235,7 @@ class Application(tk.Frame):
 		self.timeline_frames.grid(row=0,column=1,sticky="wen")
 		self.timeline_scrollbar_h= tk.Scrollbar(self.timeline,orient='horizontal',command=self.timeline_frames.xview)
 		self.timeline_scrollbar_h.grid(row=1,column=1,sticky="wen")
+		self.timeline_frames.config(yscrollcommand = self.timeline_scrollbar_h.set)
 		self.timeline.pack(fill=tk.X)
 		self.timeline_layers.bind("<Button-1>",self.mouse_click_layers)
 		self.timeline_frames.bind("<Button-1>",self.mouse_click_frames)
@@ -226,6 +243,7 @@ class Application(tk.Frame):
 		self.timeline_frames.bind("<Button-3>",self.mouse_popup_frames)
 		self.timeline_layers.bind('<Enter>',self.mouse_to_hand)
 		self.timeline_layers.bind('<Leave>',self.mouse_to_default)
+		self.timeline_frames.bind("<MouseWheel>", self.mouse_wheel)
 
 	def create_stage(self):
 		self.stage 		= tk.Frame(self.root, bg=LAYOUT["DEFAULT"]["stage"], bd=0)
@@ -255,24 +273,69 @@ class Application(tk.Frame):
 		self.stage_preview.bind('<Leave>',self.mouse_to_default)
 	
 	### RENDER ELEMENTS
-	def render_layers(self):
-		offset 			= 30
-		height 			= 49
+	def render_layers(self,redraw=False):
+		offset 			= LAYOUT["DEFAULT"]["layer-offset"]
+		height 			= LAYOUT["DEFAULT"]["layer-height"]-1
 		width			= 199
-		self.timeline_layers.delete("all")
-		for i, layer in enumerate(self.animation["timeline"]):
-			color	= LAYOUT["DEFAULT"]["layer"]
-			if self.animation["properties"]["selected_layer"]==i:
-				color	= LAYOUT["DEFAULT"]["layer-active"]
-			self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=color, outline="#444444")
-			self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill="#ffffff")
-			self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill="#ffffff")
-			self.timeline_layers.create_text(10,offset+i*height+25,fill=LAYOUT["DEFAULT"]["layer-color"],font="system 10", text=layer["name"],anchor="w")
+		if redraw:
+			self.timeline_layers.delete("all")			
+			for i, layer in enumerate(self.animation["timeline"]):
+				self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT["DEFAULT"]["layer"], outline="#444444")
+				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill="#ffffff")
+				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill="#ffffff")
+				self.timeline_layers.create_text(10,offset+i*height+25,fill=LAYOUT["DEFAULT"]["layer-color"],font="system 10", text=layer["name"],anchor="w")
+		try:
+			self.timeline_layers.delete(self.timeline_layers_select)
+		except:
+			pass
+		self.timeline_layers_select	= self.timeline_layers.create_rectangle(1, offset+self.animation["properties"]["selected_layer"]*height+1, width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height-1, fill=LAYOUT["DEFAULT"]["layer-active"], outline="", stipple="gray50")
+
+	def render_frames(self,redraw=False):
+		offset 			= LAYOUT["DEFAULT"]["layer-offset"]-1
+		width			= LAYOUT["DEFAULT"]["frame-width"]
+		height			= LAYOUT["DEFAULT"]["layer-height"]
+		max_frames		= 0
+		max_height		= (len(self.animation["timeline"])+1)*height
+		for layer in self.animation["timeline"]:
+			max_frames		= max(max_frames,len(layer["frames"]))
+		max_frames		+=10 # extra second visible in editor
+		max_width		= max(60,int(self.timeline_frames.winfo_width()/width)+1)
+		if redraw:
+			self.timeline_frames.delete("all")
+			for i in range(max(max_width,max_frames)+1):
+				for j in range(len(self.animation["timeline"])):
+					self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill="", outline=LAYOUT["DEFAULT"]["frame-color"])
+				if i%10==0:
+					self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT["DEFAULT"]["layer-color"],font="system 10", text=str(int(i/10)))
+					self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+				elif i%5==0:
+					self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+				else:
+					self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+			self.timeline_frames.create_line(0, offset, (max(max_width,max_frames)+1)*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+		try:
+			self.timeline_frames.delete(self.timeline_frames_select)
+			self.timeline_frames.delete(self.timeline_frames_select_line)
+			self.timeline_frames.delete(self.timeline_frames_select_frame)
+		except:
+			pass
+		self.timeline_frames_select	= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, 1, (self.animation["properties"]["selected_frame"]+1)*width-1, offset, outline=LAYOUT["DEFAULT"]["frame-active"], fill=LAYOUT["DEFAULT"]["frame-active"], stipple="gray50")
+		self.timeline_frames_select_line= self.timeline_frames.create_line(int(self.animation["properties"]["selected_frame"]*width+width*.5), offset+2, int(self.animation["properties"]["selected_frame"]*width+width*.5), max_height, fill=LAYOUT["DEFAULT"]["frame-active"],stipple="gray25")
+		self.timeline_frames_select_frame= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, offset+self.animation["properties"]["selected_layer"]*height, (self.animation["properties"]["selected_frame"]+1)*width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height, outline=LAYOUT["DEFAULT"]["frame-active"], fill="", stipple="gray50")
+		self.timeline_frames.update()		
 	
-	def render_frames(self):
-		offset 			= 30
-		self.timeline_frames.delete("all")
-		self.timeline_frames.create_rectangle(0, 0, self.root.winfo_width(), offset, fill="red", outline=LAYOUT["DEFAULT"]["root"])
+	def render(self,redraw=False):
+		try:
+			self.title()
+			self.render_layers(redraw)
+			self.render_frames(redraw)
+		except Exception as e:
+			self.error("Sikertelen az elemek kirajzolása!",e)
+	
+	def title(self,name=""):
+		if not name:
+			name				= self.animation["properties"]["title"]
+		self.root.title(TITLE+" "+VERSION+" - "+name)
 		
 	### FUNCTIONS
 	
@@ -287,37 +350,79 @@ class Application(tk.Frame):
 		self.file			= ""
 		self.changes_made	= False
 		self.animation		= self.new_animation() 
-		self.log("New")
+		self.render(True)
 		
 	def file_open(self,event=None):
 		self.playback_pause()
-		file				= askopenfilename(initialdir="C:/Documents/",filetypes =(("Szerkesztő fájl", "*.qpy"),),title = "Megnyitás")
+		if self.changes_made:
+			response			= messagebox.askyesnocancel(title="Másik animáció megnyitása", message="Másik animáció megnyitása előtt szeretnéd menteni a változtatásokat?", default=messagebox.YES)
+			if response:
+				self.file_save()
+			elif response is None:
+				return
+		file				= askopenfilename(defaultextension="*.qpy",initialdir="C:/Documents/",filetypes =(("QPY animációs fájl", "*.qpy"),),title = "Megnyitás")
 		if file:
 			self.file			= file
-			self.changes_made	= False
-			#messagebox.showwarning("Warning","Warning message")
-			self.log(self.file)
+			try:
+				self.loading(True)
+				with codecs.open(self.file,"r",encoding="utf-8") as f:
+					data				= f.read()
+				if '"QPY"' not in data:
+					return self.error("Nem megfelelő formátum!","A kiválasztott fájl nem Mátrix animáció!")
+				try:
+					data				= json.loads(data)
+				except Exception as e:
+					return self.error("Hibás vagy sérült fájl!",e)
+				if "version" in data and "stage" in data and "properties" in data and "timeline" in data:
+					if data["version"][0]>self.version[0] or data["version"][1]>self.version[1] or data["version"][2]>self.version[2]:
+						# TODO: auto update
+						messagebox.showinfo("Eltérő verziók!", "Ez az animáció egy újabb verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
+					self.animation		= data
+					self.changes_made	= False
+					self.render(True)
+				else:
+					return self.error("Hibás vagy sérült fájl!","A fájl alapján nem hozható létre animáció.")				
+			except Exception as e:
+				self.error("Nem sikerült megnyitni a fájlt!",e)
+			self.render(True)
+			self.loading(False)
 		
 	def file_save(self,event=None):
 		if self.file:
-			self.log("Save")
-			self.changes_made	= False
+			try:
+				self.loading(True)
+				f					= codecs.open(self.file,"w+",encoding="utf-8")
+				f.write(json.dumps(self.animation))
+				f.close()
+				self.changes_made	= False
+				self.loading(False)
+			except Exception as e:
+				return self.error("Nem sikerült menteni!",e)
 		else:
 			self.file_save_as(event)
 	
 	def file_save_as(self,event=None):
 		self.playback_pause()
-		file				= asksaveasfilename(defaultextension=".qpy")
+		file				= asksaveasfilename(defaultextension="*.qpy",initialdir="C:/Documents/",filetypes =(("QPY animációs fájl", "*.qpy"),))
 		if file:
 			self.file			= file
-			self.changes_made	= False
-			self.log(self.file)
+			try:
+				self.loading(True)
+				f					= codecs.open(self.file,"w+",encoding="utf-8")
+				f.write(json.dumps(self.animation))
+				f.close()
+				self.changes_made	= False
+				self.loading(False)
+			except Exception as e:
+				return self.error("Nem sikerült menteni!",e)
 	
 	def file_export(self,event=None):
 		self.playback_pause()
-		file				= asksaveasfilename(defaultextension=".qp4")
+		file				= asksaveasfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),))
 		if file:
+			self.loading(True)
 			messagebox.showinfo("Exportálás sikeres" , "Az animáció konvertálása sikeres volt.")
+			self.loading(False)
 			self.log("Export")
 		
 	def file_import(self,event=None):
@@ -452,10 +557,22 @@ class Application(tk.Frame):
 		self.cursor("")
 	
 	def mouse_click_layers(self,event):
-		self.log("Click")
+		y					= max(-1,int(np.floor(self.timeline_layers.canvasy(event.y-LAYOUT["DEFAULT"]["layer-offset"])/LAYOUT["DEFAULT"]["layer-height"])))
+		if y>=len(self.animation["timeline"]):
+			y					= -1
+		if y>-1:
+			self.animation["properties"]["selected_layer"] = y
+			self.render()
 		
 	def mouse_click_frames(self,event):
-		self.log("Click")
+		x					= max(0,int(np.floor(self.timeline_frames.canvasx(event.x)/LAYOUT["DEFAULT"]["frame-width"])))
+		y					= max(-1,int(np.floor(self.timeline_frames.canvasy(event.y-LAYOUT["DEFAULT"]["layer-offset"])/LAYOUT["DEFAULT"]["layer-height"])))
+		if y>=len(self.animation["timeline"]):
+			y					= -1
+		if y>-1:
+			self.animation["properties"]["selected_layer"] = y
+		self.animation["properties"]["selected_frame"] = x
+		self.render()
 	
 	def mouse_popup_layers(self, event):
 		self.mouse_click_layers(event)
@@ -471,10 +588,28 @@ class Application(tk.Frame):
 		finally:
 			self.edit_menu.grab_release()
 	
+	def mouse_wheel(self,event):
+		value		= int(event.delta/120) # Windows needs /120
+		if self.timeline_scrollbar_h.get()[0]>0 or value>0:
+			self.timeline_frames.xview_scroll(value, "units")
+		else:
+			self.timeline_frames.xview_moveto(0)
+	
 	### OTHER 
 	
 	def on_resize(self,event):
-		return
+		self.root.update()
+		if self.width!=self.root.winfo_width() or self.height!=self.root.winfo_height() or self.state!=self.root.wm_state():
+			self.width=self.root.winfo_width()
+			self.height=self.root.winfo_height()
+			self.render(True)
+	
+	def music():
+		mixer.init()
+		mixer.music.load("toto.mp3")
+		mixer.music.play()
+		mixer.music.rewind()
+		mixer.music.set_pos(10)
 	
 	def loading(self,update=True):
 		self.is_loading		= update
@@ -484,14 +619,26 @@ class Application(tk.Frame):
 			self.root.config(cursor="")
 			
 	def error(self,message="Ismeretlen hiba",e=None):					
+		self.loading(False)
 		messagebox.showerror(message, str(e))
 		self.log(message+":"+str(e))
-		if e:
+		try:
 			raise e
+		except:
+			pass
+		return
 	
 	def log(self,message=""):
-		print(time.strftime("%H:%M:%S")+" > "+message)
+		print(time.strftime("%H:%M:%S")+" > "+message,flush=True)
 	
+	def async(self,func):
+		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
+	
+	async def async_test(self,event):
+		while True:
+			await asyncio.sleep(1)
+			print(event)
+
 if __name__ == "__main__":
 	print("Ha ezt az ablakot bezárod, az alkalmazás is bezáródik!")
 	app		= Application(master=tk.Tk())

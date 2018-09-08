@@ -11,6 +11,7 @@ Az alábbi funkciók várhatók még a következõ verziókban:
 - Ikonok hozzáadása a menü elemek mellé.
 - Hangsáv képének megjelenítése a szerkesztõben. 
 - Futtatható exe fájlok és egyéb csomagok létrehozása Windows, MacOs és Linux rendszerekhez.
+- Hangerõ szabályozás.
 - Automatikus frissítés újabb verzióra.
 
 Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
@@ -26,5 +27,7 @@ Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 - Összefûzési lehetõség más animációk egymásba importálásával.
 - Elõnézetnél a színprofilok figyelembe vétele és a valóságban elérhetõ LED színek szimulációja. 
 - Elõnézetnél a LED falak hibáinak és zajának szimulálása.
+- Shadow frame (elõzõ képkocka félig átlátszón való) megjelenítése az animáció megkönnyítéséhez.
+- Vonalzó eszköz hozzáadása.
 
 Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 

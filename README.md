@@ -11,7 +11,6 @@ A **QPY** egy LED fal animáció szerkesztő Python3 alkalmazás, amely a [Schö
 ## Installálás
 A futtatáshoz szükség van [Python3.6+](https://www.python.org/downloads/) környezetre (Windows, MacOs X és Linux alatt is elérhető). Ezen felül az alábbi csomagok telepítésére van még szükség:
 ```python
-pip install numpy
 pip install asynchio
 pip install pygame
 pip install tkinter
@@ -30,6 +29,6 @@ A szerkesztés megkönnyítésére elérhetőek billentyűparancsok a legtöbb f
 A szerkesztő fájljai (\*.qpy) eltérnek az eddig használt *AnimEditor2012* fájljaitól (\*.qp4). A QPA FTP-re való feltöltéshez először exportálni kell a kész animációt, a formátumok közötti átkonvertáláshoz. Az exportálás után létrejövő fájl már megnyitható a régi szerkesztőben is és feltölthető a QPA FTP-re. 
 
 ## Várható funkciók
-A QPY animáció szerkesztő jelenleg csak **alfa teszt sátdiumban van** a legtöbb funkciója így még nem elérhető. Az újabb funkciókat folyamatosan adjuk hozzá az alkalmazáshoz. 
+A QPY animáció szerkesztő jelenleg csak **alfa teszt sátdiumban van** a legtöbb funkciója így még nem elérhető. Az újabb funkciókat folyamatosan adjuk hozzá az alkalmazáshoz. Ajánlott a gyakori mentés. 
 
 Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!

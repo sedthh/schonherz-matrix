@@ -438,8 +438,8 @@ class Application(tk.Frame):
 			#self.stage_preview.update()
 		for x in range(self.animation["stage"]["width"]):
 			for y in range(self.animation["stage"]["height"]):
-				px		= int(offset_x+x*size+x/self.animation["stage"]["skip"]*self.animation["stage"]["pad_x"])
-				py		= int(offset_y+y*size+y/self.animation["stage"]["skip"]*self.animation["stage"]["pad_y"])
+				px		= int(offset_x+x*size+int(x/self.animation["stage"]["skip"])*self.animation["stage"]["pad_x"])
+				py		= int(offset_y+y*size+int(y/self.animation["stage"]["skip"])*self.animation["stage"]["pad_y"])
 				if x in self.render_cache and y in self.render_cache[x]:
 					color	= self.render_cache[x][y]
 				else:
@@ -462,8 +462,8 @@ class Application(tk.Frame):
 		offset_x= self.animation["stage"]["offset_x"]
 		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]
 		size	= self.animation["stage"]["size"]			
-		px		= int(offset_x+x*size+x/self.animation["stage"]["skip"]*self.animation["stage"]["pad_x"])
-		py		= int(offset_y+y*size+y/self.animation["stage"]["skip"]*self.animation["stage"]["pad_y"])
+		px		= int(offset_x+x*size+int(x/self.animation["stage"]["skip"])*self.animation["stage"]["pad_x"])
+		py		= int(offset_y+y*size+int(y/self.animation["stage"]["skip"])*self.animation["stage"]["pad_y"])
 		self.stage_preview.create_rectangle(px,py,px+size,py+size,fill=color,outline="")
 	
 	def render(self,redraw=False):

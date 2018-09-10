@@ -31,12 +31,18 @@ PROFILES	= {
 		"skybox-color"		: "#0f1114",
 		"offset_x"			: 29,
 		"offset_y"			: 109,
-		"size"				: 5,
+		"size_x"			: 5,
+		"size_y"			: 5,
 		"pad_x"				: 4.75,
 		"pad_y"				: 14.2,
-		"skip"				: 2,
+		"skip_x"			: 2,
+		"skip_y"			: 2,
 		"mode"				: "12-bit RGB",
-		"palette"			: ["#FFFFFF","#AAAAAA","#FF0000","#AA0000","#00FF00","#00AA00","#0000FF","#0000AA","#FFFF00","#AA00AA"],
+		"palette"			: ["#FFFFFF","#AAAAAA","#666666","#660000","#FF0000",
+								"#FF00FF","#AA00AA","#AA00FF","#0000AA","#0000FF",
+								"#00FFFF","#00FFAA","#00AAAA","#00AA00","#00FF00",
+								"#AAFF00","#FFFF00","#AAAA00","#AA6600","#FFAA00"
+							],
 		"images"			: {
 			"preview"				: {
 				"src"					: "sch.png",
@@ -51,6 +57,14 @@ LAYOUT		= {
 		"root"				: "#f0f0f0",
 		"stage"				: "#b0b0b0",
 		"toolbar"			: "#d0d0d0",
+		"toolbar-width"		: 30,
+		"toolbar-height"	: 30,
+		"toolbar-padding"	: 5,
+		"toolbar-column"	: 1,
+		"button"			: "#ffffff",
+		"button-active"		: "#000000",
+		"button-width"		: 30,
+		"button-height"		: 20,
 		"layer"				: "#d0d0d0",
 		"layer-active"		: "#bbccdd",
 		"layer-color"		: "#202020",
@@ -63,7 +77,64 @@ LAYOUT		= {
 		"frame-empty"		: "#f0f0f0",
 		"frame-matrix"		: "#bbccdd",
 		"frame-border"		: "#d0d0d0",
-		"playback-height"	: 30,
+		"tools"				: ["pencil","line","rectangle","fill"],
+		"palette-length"	: 20,
+		"palette-width"		: 20,
+		"palette-height"	: 20,
+		"palette-active-width"	: 40,
+		"palette-active-height"	: 20,
+		"images"			: {
+			"pencil"			: {
+				"src"					: "pencil.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"pencil-active"		: {
+				"src"					: "pencil-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"line"				: {
+				"src"					: "line.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"line-active"		: {
+				"src"					: "line-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"rectangle"			: {
+				"src"					: "rectangle.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"rectangle-active"			: {
+				"src"					: "rectangle-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"fill"				: {
+				"src"					: "fill.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"fill-active"		: {
+				"src"					: "fill-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"palette"			: {
+				"src"					: "palette.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"palette-active"		: {
+				"src"					: "palette-active.png",
+				"width"					: 40,
+				"height"				: 20
+			}			
+		}
 	}
 }
 
@@ -86,7 +157,7 @@ class Application(tk.Frame):
 		self.is_m1_down		= False
 		self.is_m3_down		= False
 		self.file			= ""
-		self.tool			= 0
+		self.tool			= ""
 		self.color			= 0
 		self.animation		= self.new_animation() # animation data
 		self.render_cache	= {}
@@ -95,7 +166,17 @@ class Application(tk.Frame):
 		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])
 		self.images			= {}
 		for img in self.animation["stage"]["images"]:
-			self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,self.animation["stage"]["images"][img]["src"]),width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
+			try:
+				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",self.animation["stage"]["images"][img]["src"]),width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
+			except:
+				self.error("A keresett fájl nem található!","Nem található a(z) "+self.animation["stage"]["images"][img]["src"]+" képfájl.")
+				self.images[img]	= tk.PhotoImage(width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
+		for img in LAYOUT["DEFAULT"]["images"]:
+			try:
+				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT["DEFAULT"]["images"][img]["src"]),width=LAYOUT["DEFAULT"]["images"][img]["width"],height=LAYOUT["DEFAULT"]["images"][img]["height"])
+			except:
+				self.error("A keresett fájl nem található!","Nem található a(z) "+LAYOUT["DEFAULT"]["images"][img]["src"]+" képfájl.")
+				self.images[img]	= tk.PhotoImage(width=LAYOUT["DEFAULT"]["images"][img]["width"],height=LAYOUT["DEFAULT"]["images"][img]["height"])
 		
 		# generate editor window
 		self.root.minsize(self.width,self.height)
@@ -107,7 +188,6 @@ class Application(tk.Frame):
 			self.create_timeline()
 			self.create_stage()
 			self.pack()
-			#color	= askcolor(initialcolor="#FF00FF")
 		except Exception as e:
 			self.error("Nem sikerült létrehozni a menüelemeket!",e)
 		
@@ -119,7 +199,7 @@ class Application(tk.Frame):
 		data				= {
 			"header"			: "QPY",
 			"version"			: self.version,
-			"stage"				: PROFILES["SCH"],
+			"stage"				: PROFILES["SCH"].copy(),
 			"properties"		: {
 				"title"				: "Ischmeretlen",
 				"team"				: "Schapatnév",
@@ -131,6 +211,8 @@ class Application(tk.Frame):
 			},
 			"timeline"			: []
 		}
+		while len(data["stage"]["palette"])<LAYOUT["DEFAULT"]["palette-length"]:
+			data["stage"]["palette"].append("#ffffff")
 		# TODO: allow the manual addition of multiple layers later
 		for layer in ["Felső réteg","Középső réteg","Hátsó réteg"]:
 			data["timeline"].append({
@@ -257,8 +339,6 @@ class Application(tk.Frame):
 		self.timeline_scrollbar_h.grid(row=1,column=1,sticky="wen")
 		self.timeline_frames.config(yscrollcommand = self.timeline_scrollbar_h.set)
 		self.timeline.pack(fill=tk.X)
-		#self.playback		= tk.Frame(self.root, bd=0, highlightthickness=0, bg="red", height=10)
-		#self.playback.pack(fill=tk.X)
 		self.timeline_layers.bind("<Button-1>",self.mouse_click_layers)
 		self.timeline_frames.bind("<Button-1>",self.mouse_click_frames)
 		self.timeline_layers.bind("<Button-3>",self.mouse_popup_layers)
@@ -273,10 +353,11 @@ class Application(tk.Frame):
 		tk.Grid.rowconfigure(self.stage, 0, weight=1)
 		self.stage_tools= tk.Frame(self.stage,width=100, bg=LAYOUT["DEFAULT"]["toolbar"], bd=0, highlightthickness=0)
 		self.stage_tools.grid(row=0,column=0,sticky="nswe")
-		self.stage_tools_test=tk.Button(self.stage_tools,width=2,height=1,text="test",bg="red")
-		self.stage_tools_test.grid(row=0,column=0,sticky="w")
-		self.stage_tools_test2=tk.Button(self.stage_tools,width=3,height=1,text="test2",bg="green")
-		self.stage_tools_test2.grid(row=1,column=1,sticky="w")
+		self.stage_tools_buttons={}
+		for i,button in enumerate(LAYOUT["DEFAULT"]["tools"]):
+			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images[button],bg=LAYOUT["DEFAULT"]["button"],bd=1)
+			self.stage_tools_buttons[button]["command"]	= lambda workaround=button: self.button_tool(workaround)
+			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUT["DEFAULT"]["toolbar-column"])),column=int(i%LAYOUT["DEFAULT"]["toolbar-column"]),sticky="w")
 		
 		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUT["DEFAULT"]["stage"], width=428, height=411, bd=0,highlightthickness=0) #(0,0,428,411)
 		self.stage_editor.grid(row=0,column=1,sticky="nswe")
@@ -289,6 +370,26 @@ class Application(tk.Frame):
 		self.stage.pack(fill=tk.BOTH,expand=True)
 		self.stage_editor.configure(yscrollcommand = self.stage_scrollbar_h.set)
 		self.stage_editor.configure(xscrollcommand = self.stage_scrollbar_w.set)
+		
+		self.stage_colorpicker_padding= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=428, height=LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_colorpicker_padding.grid(row=2,column=1,sticky="nswe")
+		self.stage_colorpicker= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=428, height=LAYOUT["DEFAULT"]["toolbar-height"]-LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_colorpicker.grid(row=3,column=1,sticky="nswe")
+		self.stage_colorpicker_buttons=[]
+		color	= self.animation["stage"]["palette"][self.color]
+		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT["DEFAULT"]["palette-active-width"],height=LAYOUT["DEFAULT"]["palette-active-height"],image=self.images["palette-active"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+		self.stage_colorpicker_buttons[-1]["command"]	= lambda: self.button_colorpicker(-1)
+		self.stage_colorpicker_buttons[-1].grid(row=0,column=0,sticky="w")
+		tk.Frame(self.stage_colorpicker, bg=LAYOUT["DEFAULT"]["toolbar"],width=LAYOUT["DEFAULT"]["palette-width"],height=LAYOUT["DEFAULT"]["palette-height"]).grid(row=0, column=1,sticky="nswe")
+		for i,color in enumerate(self.animation["stage"]["palette"]):
+			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT["DEFAULT"]["palette-width"],height=LAYOUT["DEFAULT"]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
+			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
+		
+		self.stage_playback_padding		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_playback_padding.grid(row=2,column=3,sticky="nswe")
+		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-height"]-LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_playback.grid(row=3,column=3,sticky="nswe")
 		
 		self.stage_editor.bind('<Enter>',self.mouse_to_hand)
 		self.stage_preview.bind('<Enter>',self.mouse_to_hand)
@@ -304,6 +405,8 @@ class Application(tk.Frame):
 		self.stage_preview.bind("<ButtonRelease-3>",self.mouse_release_preview)
 		self.stage_editor.bind("<Motion>",self.mouse_move_stage)
 		self.stage_preview.bind("<Motion>",self.mouse_move_preview)
+		
+		self.button_tool(LAYOUT["DEFAULT"]["tools"][0])
 	
 	### RENDER ELEMENTS
 	def render_layers(self,redraw=False):
@@ -426,10 +529,9 @@ class Application(tk.Frame):
 	
 	def render_preview(self,redraw=False):
 		width	= self.stage_preview.winfo_width()
-		height	= self.stage_preview.winfo_height()-LAYOUT["DEFAULT"]["playback-height"]
+		height	= self.stage_preview.winfo_height()
 		offset_x= self.animation["stage"]["offset_x"]
-		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]
-		size	= self.animation["stage"]["size"]			
+		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]	
 		
 		if redraw:
 			self.stage_preview.delete("all")
@@ -438,13 +540,13 @@ class Application(tk.Frame):
 			#self.stage_preview.update()
 		for x in range(self.animation["stage"]["width"]):
 			for y in range(self.animation["stage"]["height"]):
-				px		= int(offset_x+x*size+int(x/self.animation["stage"]["skip"])*self.animation["stage"]["pad_x"])
-				py		= int(offset_y+y*size+int(y/self.animation["stage"]["skip"])*self.animation["stage"]["pad_y"])
+				px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
+				py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
 				if x in self.render_cache and y in self.render_cache[x]:
 					color	= self.render_cache[x][y]
 				else:
 					color	= self.animation["stage"]["background-color"]				
-				self.stage_preview.create_rectangle(px,py,px+size,py+size,fill=color,outline="")
+				self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
 
 	def render_editor_helper(self,x,y,color):
 		size	= max(1,self.animation["properties"]["zoom"])
@@ -458,13 +560,12 @@ class Application(tk.Frame):
 	
 	def render_preview_helper(self,x,y,color):
 		width	= self.stage_preview.winfo_width()
-		height	= self.stage_preview.winfo_height()-LAYOUT["DEFAULT"]["playback-height"]
+		height	= self.stage_preview.winfo_height()
 		offset_x= self.animation["stage"]["offset_x"]
-		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]
-		size	= self.animation["stage"]["size"]			
-		px		= int(offset_x+x*size+int(x/self.animation["stage"]["skip"])*self.animation["stage"]["pad_x"])
-		py		= int(offset_y+y*size+int(y/self.animation["stage"]["skip"])*self.animation["stage"]["pad_y"])
-		self.stage_preview.create_rectangle(px,py,px+size,py+size,fill=color,outline="")
+		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
+		px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
+		py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
+		self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
 	
 	def render(self,redraw=False):
 		self.loading(True)
@@ -497,6 +598,7 @@ class Application(tk.Frame):
 		self.changes_made	= False
 		self.changes_draw	= False
 		self.animation		= self.new_animation() 
+		self.refresh_colorpicker()
 		self.render(True)
 		
 	def file_open(self,event=None):
@@ -542,6 +644,7 @@ class Application(tk.Frame):
 					self.animation		= newdata
 					self.changes_made	= False
 					self.changes_draw	= False
+					self.refresh_colorpicker()
 					self.render(True)
 				else:
 					return self.error("Hibás vagy sérült fájl!","A fájl alapján nem hozható létre animáció.")				
@@ -600,7 +703,10 @@ class Application(tk.Frame):
 				self.file_save()
 			elif response is None:
 				return	
-		self.root.destroy()
+		try:
+			self.root.destroy()
+		except:
+			pass
 	
 	def edit_undo(self,event=None):
 		self.log("Undo/Redo")
@@ -798,7 +904,8 @@ class Application(tk.Frame):
 			top		= int((height-p_height*size)/2)
 			x		= int((self.stage_editor.canvasx(event.x)-left)/size)
 			y		= int((self.stage_editor.canvasy(event.y)-top)/size)
-			self.draw(x,y,self.is_m1_down,True)
+			if self.tool=="pencil":
+				self.pencil(x,y,self.is_m1_down,True)
 	
 	def mouse_click_preview(self,event):
 		self.is_m1_down	= True
@@ -820,18 +927,19 @@ class Application(tk.Frame):
 	def mouse_move_preview(self,event):
 		if self.is_m1_down or self.is_m3_down:
 			width	= self.stage_preview.winfo_width()
-			height	= self.stage_preview.winfo_height()-LAYOUT["DEFAULT"]["playback-height"]
+			height	= self.stage_preview.winfo_height()
 			offset_x= self.animation["stage"]["offset_x"]
 			offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
 			px		= int(self.stage_editor.canvasx(event.x))
 			py		= int(self.stage_editor.canvasy(event.y))
-			x		= int((px-offset_x)/(self.animation["stage"]["size"]+self.animation["stage"]["pad_x"]/self.animation["stage"]["skip"]))
-			y		= int((py-offset_y)/(self.animation["stage"]["size"]+self.animation["stage"]["pad_y"]/self.animation["stage"]["skip"]))
-			if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
-				self.draw(x,y,self.is_m1_down,False)
+			x		= int((px-offset_x)/(self.animation["stage"]["size_x"]+self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"]))
+			y		= int((py-offset_y)/(self.animation["stage"]["size_y"]+self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"]))
+			if self.tool=="pencil":
+				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
+					self.pencil(x,y,self.is_m1_down,False)
 	
 	### DRAWING
-	def draw(self,x,y,add=True,is_editor=True):
+	def pencil(self,x,y,add=True,is_editor=True):
 		self.changes_draw = True
 		#_x,_y	= str(x),str(y)
 		color	= self.animation["stage"]["palette"][self.color]
@@ -840,31 +948,60 @@ class Application(tk.Frame):
 		if layer["frames"][select]["type"]=="link":
 			select	= layer["frames"][select]["data"]
 		frame	= layer["frames"][select]["data"]
-		if self.tool==0:
-			if add:
-				if x not in frame:
-					frame[x]	= {}
-				frame[x][y]	= color
-				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
-				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
-				if is_editor:
-					self.render_editor_helper(x,y,color)
-				else:
-					self.render_preview_helper(x,y,color)
+
+		if add:
+			if x not in frame:
+				frame[x]	= {}
+			frame[x][y]	= color
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
+			if is_editor:
+				self.render_editor_helper(x,y,color)
 			else:
-				if x in frame:
-					if y in frame[x]:
-						del frame[x][y]
-					if not frame[x]:
-						del frame[x]
-				if not frame:
-					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
-				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
-				if is_editor:
-					self.render_editor_helper(x,y,self.animation["stage"]["background-color"])
-				else:
-					self.render_preview_helper(x,y,self.animation["stage"]["background-color"])
+				self.render_preview_helper(x,y,color)
+		else:
+			if x in frame:
+				if y in frame[x]:
+					del frame[x][y]
+				if not frame[x]:
+					del frame[x]
+			if not frame:
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
+			if is_editor:
+				self.render_editor_helper(x,y,self.animation["stage"]["background-color"])
+			else:
+				self.render_preview_helper(x,y,self.animation["stage"]["background-color"])			
+	
+	def button_tool(self,parameter):
+		if parameter in LAYOUT["DEFAULT"]["tools"]:
+			self.tool	= parameter
+			for button in LAYOUT["DEFAULT"]["tools"]:
+				self.stage_tools_buttons[button].configure(bg=LAYOUT["DEFAULT"]["button"])
+				self.stage_tools_buttons[button].configure(image=self.images[button])
+			self.stage_tools_buttons[parameter].configure(bg=LAYOUT["DEFAULT"]["button-active"])
+			if parameter+"-active" in self.images:
+				self.stage_tools_buttons[parameter].configure(image=self.images[parameter+"-active"])
+	
+	def button_colorpicker(self,i):
+		if i>=0 and i<len(self.animation["stage"]["palette"]):
+			self.color	= i
+		else:
+			new_color	= askcolor(initialcolor=self.animation["stage"]["palette"][self.color])
+			self.animation["stage"]["palette"][self.color]	= new_color[1]
+			self.stage_colorpicker_buttons[self.color+1].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
+		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
+
 	### OTHER 
+	
+	def refresh_colorpicker(self):
+		if is_m3_down:
+			print("right")
+		for i, color in enumerate(self.animation["stage"]["palette"]):
+			self.stage_colorpicker_buttons[i+1].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
+		color		= self.animation["stage"]["palette"][0]
+		self.stage_colorpicker_buttons[0].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
+		self.color	= 0
 	
 	def on_resize(self,event):
 		self.root.update()
@@ -915,8 +1052,11 @@ class Application(tk.Frame):
 		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
 	
 	async def async_render(self,event=None):
-		await asyncio.sleep(.5)
-		self.render(True)
+		try:
+			await asyncio.sleep(.5)
+			self.render(True)
+		except:
+			pass
 
 if __name__ == "__main__":
 	print("Ha ezt az ablakot bezárod, az alkalmazás is bezáródik!")

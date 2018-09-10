@@ -906,6 +906,8 @@ class Application(tk.Frame):
 			y		= int((self.stage_editor.canvasy(event.y)-top)/size)
 			if self.tool=="pencil":
 				self.pencil(x,y,self.is_m1_down,True)
+			elif self.tool=="fill":
+				self.fill(x,y,self.is_m1_down,True)
 	
 	def mouse_click_preview(self,event):
 		self.is_m1_down	= True
@@ -937,28 +939,32 @@ class Application(tk.Frame):
 			if self.tool=="pencil":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.pencil(x,y,self.is_m1_down,False)
-	
+			elif self.tool=="fill":
+				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
+					self.fill(x,y,self.is_m1_down,False)
+				
 	### DRAWING
-	def pencil(self,x,y,add=True,is_editor=True):
+	def get_frame(self):
 		self.changes_draw = True
-		#_x,_y	= str(x),str(y)
-		color	= self.animation["stage"]["palette"][self.color]
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		select	= min(self.animation["properties"]["selected_frame"],len(layer["frames"])-1)
 		if layer["frames"][select]["type"]=="link":
 			select	= layer["frames"][select]["data"]
-		frame	= layer["frames"][select]["data"]
-
+		frame	= layer["frames"][select]["data"].copy()
+		return frame, select
+	
+	def pencil(self,x,y,add=True,is_editor=True):
+		if add:
+			color		= self.animation["stage"]["palette"][self.color]
+		else:
+			color		= self.animation["stage"]["background-color"]
+		frame, select= self.get_frame()
 		if add:
 			if x not in frame:
 				frame[x]	= {}
 			frame[x][y]	= color
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
-			if is_editor:
-				self.render_editor_helper(x,y,color)
-			else:
-				self.render_preview_helper(x,y,color)
 		else:
 			if x in frame:
 				if y in frame[x]:
@@ -968,10 +974,73 @@ class Application(tk.Frame):
 			if not frame:
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
-			if is_editor:
-				self.render_editor_helper(x,y,self.animation["stage"]["background-color"])
-			else:
-				self.render_preview_helper(x,y,self.animation["stage"]["background-color"])			
+		if is_editor:
+			self.render_editor_helper(x,y,color)
+		else:
+			self.render_preview_helper(x,y,color)			
+	
+	def fill(self,x,y,add=True,is_editor=True):
+		self.is_m1_down = False
+		self.is_m3_down = False
+		self.changes_made = True
+		frame, select= self.get_frame()
+		min_x, min_y, max_x, max_y 	= 0, 0, self.animation["stage"]["width"], self.animation["stage"]["height"]
+		strange_bug_x,strange_bug_y=x,y
+		if is_editor:
+			for _x in frame:
+				for _y in frame[_x]:
+					min_x	= min(min_x,_x)
+					min_y	= min(min_y,_y)
+					max_x	= max(max_x,_x)
+					max_y	= max(max_y,_y)
+		if x in frame and y in frame[x]:
+			original= frame[x][y]
+		else:
+			original= ""
+		if add:
+			replace	= self.animation["stage"]["palette"][self.color]
+		else:
+			replace	= ""
+		if original!=replace:
+			self.fill_helper_boundary = False
+			self.fill_helper_frame = frame
+			self.fill_flood(x,y,min_x,max_x,min_y,max_y,original,replace)
+			if self.fill_helper_boundary is False:
+				if self.fill_helper_frame:
+					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
+				else:
+					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = self.fill_helper_frame.copy()
+				self.render(True)
+		self.cursor("hand2")			
+	
+	def fill_flood(self,x,y,min_x,max_x,min_y,max_y,original,replace):
+		if self.fill_helper_boundary:
+			return
+		if x<min_x or x>=max_x or y<min_y or y>=max_y:
+			self.fill_helper_boundary=True
+			return
+		if original:
+			if x not in self.fill_helper_frame or y not in self.fill_helper_frame[x] or self.fill_helper_frame[x][y]!=original:
+				return
+		else:
+			if x in self.fill_helper_frame and y in self.fill_helper_frame[x] and self.fill_helper_frame[x][y]:
+				return
+		if x not in self.fill_helper_frame:
+			self.fill_helper_frame[x]= {}
+		if replace:
+			self.fill_helper_frame[x][y]= replace
+		else:
+			if y in self.fill_helper_frame[x]:
+				del self.fill_helper_frame[x][y]
+			if not self.fill_helper_frame[x]:
+				del self.fill_helper_frame[x]
+			if not self.fill_helper_frame:
+				return
+		self.fill_flood(x,y+1,min_x,max_x,min_y,max_y,original,replace)
+		self.fill_flood(x,y-1,min_x,max_x,min_y,max_y,original,replace)
+		self.fill_flood(x-1,y,min_x,max_x,min_y,max_y,original,replace)
+		self.fill_flood(x+1,y,min_x,max_x,min_y,max_y,original,replace)
 	
 	def button_tool(self,parameter):
 		if parameter in LAYOUT["DEFAULT"]["tools"]:
@@ -1004,22 +1073,25 @@ class Application(tk.Frame):
 		self.color	= 0
 	
 	def on_resize(self,event):
-		self.root.update()
-		update	= False
-		if self.width!=self.root.winfo_width() or self.height!=self.root.winfo_height():
-			update		= True
-		if self.state!=self.root.wm_state():
-			update		= True
-			self.async(self.async_render())
-		if update:
-			self.stage_editor.update()
-			self.stage_preview.update()
-			self.stage.update()
+		try:
 			self.root.update()
-			self.width	= self.root.winfo_width()
-			self.height	= self.root.winfo_height()		
-			self.state	= self.root.wm_state()
-			self.render(True)
+			update	= False
+			if self.width!=self.root.winfo_width() or self.height!=self.root.winfo_height():
+				update		= True
+			if self.state!=self.root.wm_state():
+				update		= True
+				self.async(self.async_render())
+			if update:
+				self.stage_editor.update()
+				self.stage_preview.update()
+				self.stage.update()
+				self.root.update()
+				self.width	= self.root.winfo_width()
+				self.height	= self.root.winfo_height()		
+				self.state	= self.root.wm_state()
+				self.render(True)
+		except:
+			pass
 		
 	def music():
 		mixer.init()

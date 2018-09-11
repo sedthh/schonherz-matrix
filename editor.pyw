@@ -77,7 +77,7 @@ LAYOUT		= {
 		"frame-empty"		: "#f0f0f0",
 		"frame-matrix"		: "#bbccdd",
 		"frame-border"		: "#d0d0d0",
-		"tools"				: ["pencil","line","rectangle","fill"],
+		"tools"				: ["pencil","line","rectangle","fill","picker","zoom"],
 		"palette-length"	: 20,
 		"palette-width"		: 20,
 		"palette-height"	: 20,
@@ -124,12 +124,32 @@ LAYOUT		= {
 				"width"					: 20,
 				"height"				: 20
 			},
+			"picker"			: {
+				"src"					: "picker.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"picker-active"		: {
+				"src"					: "picker-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"zoom"				: {
+				"src"					: "zoom.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"zoom-active"		: {
+				"src"					: "zoom-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
 			"palette"			: {
 				"src"					: "palette.png",
 				"width"					: 20,
 				"height"				: 20
 			},
-			"palette-active"		: {
+			"palette-active"	: {
 				"src"					: "palette-active.png",
 				"width"					: 40,
 				"height"				: 20
@@ -405,6 +425,8 @@ class Application(tk.Frame):
 		self.stage_preview.bind("<ButtonRelease-3>",self.mouse_release_preview)
 		self.stage_editor.bind("<Motion>",self.mouse_move_stage)
 		self.stage_preview.bind("<Motion>",self.mouse_move_preview)
+		self.stage_editor.bind("<MouseWheel>", self.mouse_wheel_stage)
+		self.stage_preview.bind("<MouseWheel>", self.mouse_wheel_stage)
 		
 		self.button_tool(LAYOUT["DEFAULT"]["tools"][0])
 	
@@ -908,6 +930,10 @@ class Application(tk.Frame):
 				self.pencil(x,y,self.is_m1_down,True)
 			elif self.tool=="fill":
 				self.fill(x,y,self.is_m1_down,True)
+			elif self.tool=="picker":
+				self.picker(x,y,True)
+			elif self.tool=="zoom":
+				self.zoom(self.is_m1_down)
 	
 	def mouse_click_preview(self,event):
 		self.is_m1_down	= True
@@ -934,15 +960,29 @@ class Application(tk.Frame):
 			offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
 			px		= int(self.stage_editor.canvasx(event.x))
 			py		= int(self.stage_editor.canvasy(event.y))
-			x		= int((px-offset_x)/(self.animation["stage"]["size_x"]+self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"]))
-			y		= int((py-offset_y)/(self.animation["stage"]["size_y"]+self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"]))
+			x		= int((px-offset_x)/(self.animation["stage"]["size_x"]+int(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
+			y		= int((py-offset_y)/(self.animation["stage"]["size_y"]+int(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
 			if self.tool=="pencil":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.pencil(x,y,self.is_m1_down,False)
 			elif self.tool=="fill":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.fill(x,y,self.is_m1_down,False)
-				
+			elif self.tool=="picker":
+				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
+					self.picker(x,y,False)
+	
+	def mouse_wheel_stage(self,event):
+		if event.delta>0:
+			self.color+=1
+			if self.color>=len(self.animation["stage"]["palette"]):
+				self.color=0
+		else:
+			self.color-=1
+			if self.color<0:
+				self.color	= len(self.animation["stage"]["palette"])-1
+		self.button_colorpicker(self.color)
+	
 	### DRAWING
 	def get_frame(self):
 		self.changes_draw = True
@@ -952,6 +992,30 @@ class Application(tk.Frame):
 			select	= layer["frames"][select]["data"]
 		frame	= layer["frames"][select]["data"].copy()
 		return frame, select
+		
+	def zoom(self,inc=True):
+		self.is_m1_down	= False
+		self.is_m3_down	= False
+		if inc:
+			self.animation["properties"]["zoom"] = min(int(self.animation["properties"]["zoom"]/5)*5+5,35)
+		else:
+			self.animation["properties"]["zoom"] = max(int(self.animation["properties"]["zoom"]/5)*5-5,1)
+		self.render_editor(True)
+		self.cursor("hand2")
+	
+	def picker(self,x,y,is_editor=True):
+		self.is_m1_down	= False
+		self.is_m3_down	= False
+		self.changes_draw= False
+		frame, select= self.get_frame()
+		if is_editor:
+			if x in frame and y in frame[x]:
+				self.animation["stage"]["palette"][self.color]	= frame[x][y]
+		else:
+			if x in self.render_cache and y in self.render_cache[x]:
+				self.animation["stage"]["palette"][self.color]	= self.render_cache[x][y]
+		self.refresh_colorpicker()
+		self.cursor("hand2")
 	
 	def pencil(self,x,y,add=True,is_editor=True):
 		if add:
@@ -983,16 +1047,19 @@ class Application(tk.Frame):
 		self.is_m1_down = False
 		self.is_m3_down = False
 		self.changes_made = True
+		self.changes_draw= False
 		frame, select= self.get_frame()
 		min_x, min_y, max_x, max_y 	= 0, 0, self.animation["stage"]["width"], self.animation["stage"]["height"]
-		strange_bug_x,strange_bug_y=x,y
-		if is_editor:
-			for _x in frame:
-				for _y in frame[_x]:
-					min_x	= min(min_x,_x)
-					min_y	= min(min_y,_y)
-					max_x	= max(max_x,_x)
-					max_y	= max(max_y,_y)
+		strange_bug	= {}
+		for _x in frame:
+			if _x not in strange_bug:
+				strange_bug[_x]={}
+			for _y in frame[_x]:
+				min_x	= min(min_x,_x)
+				min_y	= min(min_y,_y)
+				max_x	= max(max_x,_x)
+				max_y	= max(max_y,_y)
+				strange_bug[_x][_y]=frame[_x][_y]
 		if x in frame and y in frame[x]:
 			original= frame[x][y]
 		else:
@@ -1002,45 +1069,44 @@ class Application(tk.Frame):
 		else:
 			replace	= ""
 		if original!=replace:
-			self.fill_helper_boundary = False
-			self.fill_helper_frame = frame
-			self.fill_flood(x,y,min_x,max_x,min_y,max_y,original,replace)
-			if self.fill_helper_boundary is False:
-				if self.fill_helper_frame:
+			self.fill_break=False
+			strange_bug	= self.fill_flood(strange_bug,x,y,min_x,max_x,min_y,max_y,original,replace)
+			if not self.fill_break:
+				if strange_bug:
 					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
 				else:
 					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
-				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = self.fill_helper_frame.copy()
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = strange_bug.copy()
 				self.render(True)
-		self.cursor("hand2")			
+		self.cursor("hand2")
 	
-	def fill_flood(self,x,y,min_x,max_x,min_y,max_y,original,replace):
-		if self.fill_helper_boundary:
-			return
+	# based on https://stackoverflow.com/questions/19839947/flood-fill-in-python
+	def fill_flood(self,frame,x,y,min_x,max_x,min_y,max_y,original,replace):
+		if frame is False or self.fill_break:
+			self.fill_break=True
+			return frame
 		if x<min_x or x>=max_x or y<min_y or y>=max_y:
-			self.fill_helper_boundary=True
-			return
-		if original:
-			if x not in self.fill_helper_frame or y not in self.fill_helper_frame[x] or self.fill_helper_frame[x][y]!=original:
-				return
-		else:
-			if x in self.fill_helper_frame and y in self.fill_helper_frame[x] and self.fill_helper_frame[x][y]:
-				return
-		if x not in self.fill_helper_frame:
-			self.fill_helper_frame[x]= {}
-		if replace:
-			self.fill_helper_frame[x][y]= replace
-		else:
-			if y in self.fill_helper_frame[x]:
-				del self.fill_helper_frame[x][y]
-			if not self.fill_helper_frame[x]:
-				del self.fill_helper_frame[x]
-			if not self.fill_helper_frame:
-				return
-		self.fill_flood(x,y+1,min_x,max_x,min_y,max_y,original,replace)
-		self.fill_flood(x,y-1,min_x,max_x,min_y,max_y,original,replace)
-		self.fill_flood(x-1,y,min_x,max_x,min_y,max_y,original,replace)
-		self.fill_flood(x+1,y,min_x,max_x,min_y,max_y,original,replace)
+			if original=="":
+				self.fill_break=True
+				return frame
+		if (original=="" and (x not in frame or (x in frame and y not in frame[x]))) or (x in frame and y in frame[x] and frame[x][y] == original):
+			if x not in frame:
+				frame[x]={}
+			if replace:
+				frame[x][y] = replace 
+			else:
+				del frame[x][y]			
+			if x >= min_x:
+				frame	= self.fill_flood(frame.copy(),x-1,y,min_x,max_x,min_y,max_y,original,replace)
+			if x < max_x:
+				frame	= self.fill_flood(frame.copy(),x+1,y,min_x,max_x,min_y,max_y,original,replace)
+			if y >= min_y:
+				frame 	= self.fill_flood(frame.copy(),x,y-1,min_x,max_x,min_y,max_y,original,replace)
+			if y < max_y:
+				frame	= self.fill_flood(frame.copy(),x,y+1,min_x,max_x,min_y,max_y,original,replace)
+			if x in frame and not frame[x]:
+				del frame[x]
+		return frame.copy()
 	
 	def button_tool(self,parameter):
 		if parameter in LAYOUT["DEFAULT"]["tools"]:
@@ -1064,8 +1130,6 @@ class Application(tk.Frame):
 	### OTHER 
 	
 	def refresh_colorpicker(self):
-		if is_m3_down:
-			print("right")
 		for i, color in enumerate(self.animation["stage"]["palette"]):
 			self.stage_colorpicker_buttons[i+1].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
 		color		= self.animation["stage"]["palette"][0]

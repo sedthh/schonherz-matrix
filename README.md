@@ -32,3 +32,5 @@ A szerkesztő fájljai (\*.qpy) eltérnek az eddig használt *AnimEditor2012* f�
 A QPY animáció szerkesztő jelenleg csak **alfa teszt sátdiumban van** a legtöbb funkciója így még nem elérhető. Az újabb funkciókat folyamatosan adjuk hozzá az alkalmazáshoz. Ajánlott a gyakori mentés. 
 
 Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!
+
+Ha esetleg idén is tetriszt, snake-et, nyan catet vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.

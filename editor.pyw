@@ -153,7 +153,27 @@ LAYOUT		= {
 				"src"					: "palette-active.png",
 				"width"					: 40,
 				"height"				: 20
-			}			
+			},
+			"rewind"			: {
+				"src"					: "rewind.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"play"			: {
+				"src"					: "play.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"pause"			: {
+				"src"					: "pause.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"end"			: {
+				"src"					: "end.png",
+				"width"					: 20,
+				"height"				: 20
+			},
 		}
 	}
 }
@@ -179,6 +199,10 @@ class Application(tk.Frame):
 		self.file			= ""
 		self.tool			= ""
 		self.color			= 0
+		self.start_x		= None
+		self.end_x			= 0
+		self.start_y		= None
+		self.end_y			= 0
 		self.animation		= self.new_animation() # animation data
 		self.render_cache	= {}
 
@@ -347,6 +371,8 @@ class Application(tk.Frame):
 		self.menubar.add_cascade(label = "Segítség", menu = self.help_menu)
 		self.root.config(menu=self.menubar)
 		
+		self.root.bind_all("<Tab>", self.change_layer)
+		
 	def create_timeline(self):
 		height				= LAYOUT["DEFAULT"]["layer-height"]*3+LAYOUT["DEFAULT"]["layer-offset"]
 		self.timeline 		= tk.Frame(self.root, bg=LAYOUT["DEFAULT"]["layer"], bd=0, highlightthickness=0)
@@ -406,10 +432,14 @@ class Application(tk.Frame):
 			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
 			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
 		
-		self.stage_playback_padding		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-padding"])
-		self.stage_playback_padding.grid(row=2,column=3,sticky="nswe")
-		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-height"]-LAYOUT["DEFAULT"]["toolbar-padding"])
-		self.stage_playback.grid(row=3,column=3,sticky="nswe")
+		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-height"])
+		self.stage_playback.grid(row=3,column=3)
+		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["rewind"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_rewind)
+		self.stage_playback_rewind.grid(row=0,column=0,sticky="nsw")		
+		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["play"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_toggle)
+		self.stage_playback_toggle.grid(row=0,column=2,sticky="nswe")		
+		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["end"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_end)
+		self.stage_playback_end.grid(row=0,column=3,sticky="nse")		
 		
 		self.stage_editor.bind('<Enter>',self.mouse_to_hand)
 		self.stage_preview.bind('<Enter>',self.mouse_to_hand)
@@ -804,10 +834,12 @@ class Application(tk.Frame):
 	
 	def playback_play(self,event=None):
 		self.log("Play")
+		self.stage_playback_toggle.configure(image=self.images["pause"])
 		self.is_playing		= True
 	
 	def playback_pause(self,event=None):
 		self.log("Pause")
+		self.stage_playback_toggle.configure(image=self.images["play"])
 		self.is_playing		= False
 		
 	def playback_stop(self,event=None):
@@ -818,6 +850,7 @@ class Application(tk.Frame):
 		self.log("Rewind")
 	
 	def playback_end(self,event=None):
+		self.playback_pause()
 		self.log("End")
 		
 	def playback_back(self,event=None):
@@ -851,6 +884,8 @@ class Application(tk.Frame):
 	
 	def mouse_to_default(self, event):
 		self.cursor("")
+		if self.tool=="line":
+			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -900,13 +935,19 @@ class Application(tk.Frame):
 	
 	def mouse_click_stage(self,event):
 		self.is_m1_down	= True
+		self.start_x	= None
+		self.start_y	= None
 		self.mouse_move_stage(event)
 	
 	def mouse_popup_stage(self,event):
 		self.is_m3_down	= True
+		self.start_x	= None
+		self.start_y	= None
 		self.mouse_move_stage(event)
 	
 	def mouse_release_stage(self,event):
+		if self.tool=="line":
+			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -926,8 +967,16 @@ class Application(tk.Frame):
 			top		= int((height-p_height*size)/2)
 			x		= int((self.stage_editor.canvasx(event.x)-left)/size)
 			y		= int((self.stage_editor.canvasy(event.y)-top)/size)
+			if self.start_x is None:
+				self.start_x	= x
+			if self.start_y is None:
+				self.start_y	= y
+			self.end_x	= x
+			self.end_y	= y
 			if self.tool=="pencil":
 				self.pencil(x,y,self.is_m1_down,True)
+			elif self.tool=="line":
+				self.line(x,y,self.is_m1_down,True,True)
 			elif self.tool=="fill":
 				self.fill(x,y,self.is_m1_down,True)
 			elif self.tool=="picker":
@@ -937,13 +986,19 @@ class Application(tk.Frame):
 	
 	def mouse_click_preview(self,event):
 		self.is_m1_down	= True
+		self.start_x	= None
+		self.start_y	= None
 		self.mouse_move_preview(event)
 	
 	def mouse_popup_preview(self,event):
 		self.is_m3_down	= True
+		self.start_x	= None
+		self.start_y	= None
 		self.mouse_move_preview(event)
 	
 	def mouse_release_preview(self,event):
+		if self.tool=="line":
+			self.line(self.end_x,self.end_y,self.is_m1_down,False,False)
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -958,13 +1013,21 @@ class Application(tk.Frame):
 			height	= self.stage_preview.winfo_height()
 			offset_x= self.animation["stage"]["offset_x"]
 			offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
-			px		= int(self.stage_editor.canvasx(event.x))
-			py		= int(self.stage_editor.canvasy(event.y))
+			px		= int(self.stage_preview.canvasx(event.x))
+			py		= int(self.stage_preview.canvasy(event.y))
 			x		= int((px-offset_x)/(self.animation["stage"]["size_x"]+int(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
 			y		= int((py-offset_y)/(self.animation["stage"]["size_y"]+int(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
+			if self.start_x is None:
+				self.start_x	= x
+			if self.start_y is None:
+				self.start_y	= y
+			self.end_x	= x
+			self.end_y	= y
 			if self.tool=="pencil":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.pencil(x,y,self.is_m1_down,False)
+			elif self.tool=="line":
+				self.line(x,y,self.is_m1_down,False,True)
 			elif self.tool=="fill":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.fill(x,y,self.is_m1_down,False)
@@ -1043,6 +1106,66 @@ class Application(tk.Frame):
 		else:
 			self.render_preview_helper(x,y,color)			
 	
+	def line(self,x,y,add=True,is_editor=True,hint=True):
+		if self.start_x is None:
+			self.start_x	= x
+		if self.start_y is None:
+			self.start_y	= y
+		if add:
+			color		= self.animation["stage"]["palette"][self.color]
+		else:
+			color		= self.animation["stage"]["background-color"]
+		if hint:
+			if is_editor:
+				self.render_editor(True)
+			else:
+				self.render_preview(True)
+		else:
+			frame, select= self.get_frame()
+		# based on http://floppsie.comp.glam.ac.uk/Glamorgan/gaius/gametools/6.html
+
+		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
+		dx = abs(x1 - x0)
+		dy = abs(y1 - y0)
+		sx = -1 if x0 > x1 else 1
+		sy = -1 if y0 > y1 else 1
+		err = dx-dy
+		while True:
+			if hint:
+				if is_editor:
+					self.render_editor_helper(x0,y0,color)
+				else:
+					self.render_preview_helper(x0,y0,color)
+			else:
+				if add:
+					if x0 not in frame:
+						frame[x0]		= {}
+					frame[x0][y0]	= color
+				else:
+					if x0 in frame and y0 in frame[x0]:
+						del frame[x0][y0]
+						if not frame[x0]:
+							del frame[x0]
+			if x0 == x1 and y0 == y1:
+				break
+			e2 = 2*err
+			if e2 > -dy:
+				err = err - dy
+				x0 = x0 + sx
+			if e2 < dx:
+				err = err + dx
+				y0 = y0 + sy
+
+		if not hint:
+			if x not in frame:
+				frame[x]		= {}
+			frame[x][y]		= color
+			self.start_x	= None
+			self.start_y	= None
+			if not frame:
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
+		
 	def fill(self,x,y,add=True,is_editor=True):
 		self.is_m1_down = False
 		self.is_m3_down = False
@@ -1077,7 +1200,6 @@ class Application(tk.Frame):
 				else:
 					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = strange_bug.copy()
-				self.render(True)
 		self.cursor("hand2")
 	
 	# based on https://stackoverflow.com/questions/19839947/flood-fill-in-python
@@ -1136,6 +1258,10 @@ class Application(tk.Frame):
 		self.stage_colorpicker_buttons[0].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
 		self.color	= 0
 	
+	def change_layer(self,event=None):
+		self.animation["properties"]["selected_layer"] = (self.animation["properties"]["selected_layer"]+1)%len(self.animation["timeline"])
+		self.render(True)
+	
 	def on_resize(self,event):
 		try:
 			self.root.update()
@@ -1144,7 +1270,7 @@ class Application(tk.Frame):
 				update		= True
 			if self.state!=self.root.wm_state():
 				update		= True
-				self.async(self.async_render())
+				self.async_run(self.async_render())
 			if update:
 				self.stage_editor.update()
 				self.stage_preview.update()
@@ -1184,7 +1310,7 @@ class Application(tk.Frame):
 	def log(self,message=""):
 		print(time.strftime("%H:%M:%S")+" > "+message,flush=True)
 	
-	def async(self,func):
+	def async_run(self,func):
 		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
 	
 	async def async_render(self,event=None):

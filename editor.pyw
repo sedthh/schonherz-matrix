@@ -24,6 +24,7 @@ VERSION		= "0.1.0 alfa"
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
+		"speed"				: 100,
 		"width"				: 32,
 		"height"			: 26,
 		"background-color"	: "#000000",
@@ -38,7 +39,7 @@ PROFILES	= {
 		"skip_x"			: 2,
 		"skip_y"			: 2,
 		"mode"				: "12-bit RGB",
-		"palette"			: ["#FFFFFF","#AAAAAA","#666666","#660000","#FF0000",
+		"palette"			: ["#FFFFFF","#AAAAAA","#444444","#660000","#FF0000",
 								"#FF00FF","#AA00AA","#AA00FF","#0000AA","#0000FF",
 								"#00FFFF","#00FFAA","#00AAAA","#00AA00","#00FF00",
 								"#AAFF00","#FFFF00","#AAAA00","#AA6600","#FFAA00"
@@ -334,10 +335,10 @@ class Application(tk.Frame):
 		self.properties_menu.add_command(label = "Zene betöltése", command = self.properties_music)
 		
 		self.transform_menu	= tk.Menu(self.menubar, tearoff=0)
-		self.transform_menu.add_command(label = "Elforgatás jobbra 90 fokkal", command = self.transform_rotate_right, state=tk.DISABLED)
-		self.transform_menu.add_command(label = "Elforgatás balra 90 fokkal", command = self.transform_rotate_left, state=tk.DISABLED)
-		self.transform_menu.add_command(label = "Vízszintes tükrözés", command = self.transform_flip_horizontal, state=tk.DISABLED)
-		self.transform_menu.add_command(label = "Függőleges tükrözés", command = self.transform_flip_vertical, state=tk.DISABLED)
+		self.transform_menu.add_command(label = "Elforgatás jobbra 90 fokkal", command = self.transform_rotate_right)
+		self.transform_menu.add_command(label = "Elforgatás balra 90 fokkal", command = self.transform_rotate_left)
+		self.transform_menu.add_command(label = "Vízszintes tükrözés", command = self.transform_flip_horizontal)
+		self.transform_menu.add_command(label = "Függőleges tükrözés", command = self.transform_flip_vertical)
 		self.transform_menu.add_command(label = "Elmozgatás felfelé", command = self.transform_move_up, underline=1,accelerator="Up")
 		self.root.bind_all("<Up>", self.transform_move_up)
 		self.transform_menu.add_command(label = "Elmozgatás lefelé", command = self.transform_move_down,underline=1,accelerator="Down")
@@ -627,6 +628,7 @@ class Application(tk.Frame):
 			self.render_frames(redraw)
 			self.render_editor(redraw)
 			self.render_preview(redraw)
+			self.changes_draw = False
 		except Exception as e:
 			self.error("Sikertelen az elemek kirajzolása!",e)
 		self.loading(False)
@@ -794,7 +796,27 @@ class Application(tk.Frame):
 		self.log("Reduce")
 	
 	def properties_animation(self,event=None):
-		self.log("Animation properties")
+		self.properties_window= tk.Toplevel(self.root)
+		self.properties_window.wm_title("Beállítások")
+		l_title	= tk.Label(self.properties_window,text="Animáció címe:")
+		l_title.grid(row=0,column=0,sticky="w", padx=(20, 10), pady=(10,0))
+		self.v_title = tk.StringVar(self.properties_window)
+		self.v_title.set(self.animation["properties"]["title"])
+		e_title	= tk.Entry(self.properties_window,textvariable=self.v_title)
+		e_title.grid(row=0,column=1,sticky="we", padx=(10, 20), pady=(10,0))
+		l_team	= tk.Label(self.properties_window,text="Csapatnév:")
+		l_team.grid(row=1,column=0,sticky="w", padx=(20, 10), pady=(0,10))
+		self.v_team 	= tk.StringVar(self.properties_window)
+		self.v_team.set(self.animation["properties"]["team"])
+		e_team	= tk.Entry(self.properties_window,textvariable=self.v_team)
+		e_team.grid(row=1,column=1,sticky="we", padx=(10, 20), pady=(0,0))
+		save	= tk.Button(self.properties_window,text="Mentés",command=lambda:[self.properties_update({"title":self.v_title.get(),"team":self.v_team.get()}),self.properties_window.destroy()])
+		save.grid(row=2,column=1,sticky="we", padx=(10,20), pady=(10,10))
+	
+	def properties_update(self,data):
+		for key in data:
+			self.animation["properties"][key] = data[key]
+		self.render(True)
 		
 	def properties_stage(self,event=None):
 		self.log("Stage properties")
@@ -803,28 +825,28 @@ class Application(tk.Frame):
 		self.log("Music properties")
 	
 	def transform_rotate_right(self,event=None):
-		self.log("Transform rotate right")
+		self.rotate(True)
 	
 	def transform_rotate_left(self,event=None):
-		self.log("Transform rotate left")
+		self.rotate(False)
 		
 	def transform_flip_horizontal(self,event=None):
-		self.log("Transform flip horizontal")
+		self.flip(True)
 	
 	def transform_flip_vertical(self,event=None):
-		self.log("Transform flip vertical")	
+		self.flip(False)
 			
 	def transform_move_up(self,event=None):
-		self.log("Transform move up")	
+		self.move(0,-1)
 	
 	def transform_move_down(self,event=None):
-		self.log("Transform move down")	
+		self.move(0,1)
 		
 	def transform_move_left(self,event=None):
-		self.log("Transform move left")	
+		self.move(-1,0)
 		
 	def transform_move_right(self,event=None):
-		self.log("Transform move right")	
+		self.move(1,0)
 
 	def playback_toggle(self,event=None):
 		if self.is_playing:
@@ -878,14 +900,22 @@ class Application(tk.Frame):
 		
 	def mouse_to_hand(self, event):
 		self.cursor("hand2")
+		if (self.is_m1_down or self.is_m3_down) and self.start_x is not None and self.start_y is not None:
+			if self.tool in ("line","rectangle"):
+				return
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.changes_draw = False
 	
 	def mouse_to_default(self, event):
 		self.cursor("")
-		if self.tool=="line":
-			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
+		if (self.is_m1_down or self.is_m3_down) and self.start_x is not None and self.start_y is not None:
+			if self.tool=="line":
+				self.line(self.end_x,self.end_y,self.is_m1_down,True,True)
+				return
+			elif self.tool=="rectangle":
+				self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,True)
+				return
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -948,6 +978,8 @@ class Application(tk.Frame):
 	def mouse_release_stage(self,event):
 		if self.tool=="line":
 			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
+		elif self.tool=="rectangle":
+			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -977,6 +1009,8 @@ class Application(tk.Frame):
 				self.pencil(x,y,self.is_m1_down,True)
 			elif self.tool=="line":
 				self.line(x,y,self.is_m1_down,True,True)
+			elif self.tool=="rectangle":
+				self.rectangle(x,y,self.is_m1_down,True,True)
 			elif self.tool=="fill":
 				self.fill(x,y,self.is_m1_down,True)
 			elif self.tool=="picker":
@@ -999,6 +1033,8 @@ class Application(tk.Frame):
 	def mouse_release_preview(self,event):
 		if self.tool=="line":
 			self.line(self.end_x,self.end_y,self.is_m1_down,False,False)
+		elif self.tool=="rectangle":
+			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -1015,8 +1051,8 @@ class Application(tk.Frame):
 			offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
 			px		= int(self.stage_preview.canvasx(event.x))
 			py		= int(self.stage_preview.canvasy(event.y))
-			x		= int((px-offset_x)/(self.animation["stage"]["size_x"]+int(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
-			y		= int((py-offset_y)/(self.animation["stage"]["size_y"]+int(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
+			x		= round((px-offset_x)/(self.animation["stage"]["size_x"]+(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
+			y		= round((py-offset_y)/(self.animation["stage"]["size_y"]+(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
 			if self.start_x is None:
 				self.start_x	= x
 			if self.start_y is None:
@@ -1028,6 +1064,8 @@ class Application(tk.Frame):
 					self.pencil(x,y,self.is_m1_down,False)
 			elif self.tool=="line":
 				self.line(x,y,self.is_m1_down,False,True)
+			elif self.tool=="rectangle":
+				self.rectangle(x,y,self.is_m1_down,False,True)
 			elif self.tool=="fill":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.fill(x,y,self.is_m1_down,False)
@@ -1106,11 +1144,66 @@ class Application(tk.Frame):
 		else:
 			self.render_preview_helper(x,y,color)			
 	
+	def move(self,x_delta=0,y_delta=0):
+		frame, select= self.get_frame()
+		if not frame:
+			return
+		new_frame	= {}
+		for x in frame:
+			new_frame[(x+x_delta)]={}
+			for y in frame[x]:
+				new_frame[(x+x_delta)][(y+y_delta)]=frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = new_frame.copy()
+		self.render(True)
+	
+	def flip(self,horizontal=True,render_flip=True):
+		frame, select= self.get_frame()
+		if not frame:
+			return
+		if horizontal:
+			x_offset	= int(self.animation["stage"]["width"])-1
+			x_delta		= -1
+			y_offset	= 0
+			y_delta		= 1
+		else:
+			x_offset	= 0
+			x_delta		= 1
+			y_offset	= int(self.animation["stage"]["height"])-1
+			y_delta		= -1
+		new_frame	= {}
+		for x in frame:
+			new_frame[(x*x_delta+x_offset)]={}
+			for y in frame[x]:
+				new_frame[(x*x_delta+x_offset)][(y*y_delta+y_offset)]=frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = new_frame.copy()
+		if render_flip:
+			self.render(True)
+	
+	def rotate(self,right=True):
+		frame, select= self.get_frame()
+		if not frame:
+			return
+		transpose	= {}	
+		for x in frame:
+			for y in frame[x]:
+				if y not in transpose:
+					transpose[y]	= {}
+				transpose[y][x]	= frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = transpose.copy()			
+		self.flip(right,False)
+		if right:
+			self.move(-self.animation["stage"]["width"],0)
+		else:
+			self.move(0,-self.animation["stage"]["height"])
+	
 	def line(self,x,y,add=True,is_editor=True,hint=True):
-		if self.start_x is None:
-			self.start_x	= x
-		if self.start_y is None:
-			self.start_y	= y
+		if hint:
+			if self.start_x is None:
+				self.start_x	= x
+			if self.start_y is None:
+				self.start_y	= y
+		if x is None or self.start_x is None or y is None or self.start_y is None:
+			return
 		if add:
 			color		= self.animation["stage"]["palette"][self.color]
 		else:
@@ -1123,7 +1216,6 @@ class Application(tk.Frame):
 		else:
 			frame, select= self.get_frame()
 		# based on http://floppsie.comp.glam.ac.uk/Glamorgan/gaius/gametools/6.html
-
 		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
 		dx = abs(x1 - x0)
 		dy = abs(y1 - y0)
@@ -1159,13 +1251,67 @@ class Application(tk.Frame):
 		if not hint:
 			if x not in frame:
 				frame[x]		= {}
-			frame[x][y]		= color
+			if add:
+				frame[x][y]		= self.animation["stage"]["palette"][self.color]
+			else:
+				if x in frame and y in frame[x]:
+					del frame[x][y]
+					if not frame[x]:
+						del frame[x]
 			self.start_x	= None
 			self.start_y	= None
 			if not frame:
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
-		
+	
+	def rectangle(self,x,y,add=True,is_editor=True,hint=True):
+		if hint:
+			if self.start_x is None:
+				self.start_x	= x
+			if self.start_y is None:
+				self.start_y	= y
+		if x is None or self.start_x is None or y is None or self.start_y is None:
+			return
+		if add:
+			color		= self.animation["stage"]["palette"][self.color]
+		else:
+			color		= self.animation["stage"]["background-color"]
+		if hint:
+			if is_editor:
+				self.render_editor(True)
+			else:
+				self.render_preview(True)
+		else:
+			frame, select= self.get_frame()
+		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
+		if x0>x1:
+			x0,x1=x1,x0
+		if y0>y1:
+			y0,y1=y1,y0
+		for _x in range(x0,x1):
+			for _y in range(y0,y1):
+				if hint:
+					if is_editor:
+						self.render_editor_helper(_x,_y,color)
+					else:
+						self.render_preview_helper(_x,_y,color)
+				else:
+					if add:
+						if _x not in frame:
+							frame[_x]		= {}
+						frame[_x][_y]	= color
+					else:
+						if _x in frame and	_y in frame[_x]:
+							del frame[_x][_y]
+							if not frame[_x]:
+								del frame[_x]
+		if not hint:
+			self.start_x	= None
+			self.start_y	= None
+			if not frame:
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame	 
+	
 	def fill(self,x,y,add=True,is_editor=True):
 		self.is_m1_down = False
 		self.is_m3_down = False

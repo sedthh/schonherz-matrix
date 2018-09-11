@@ -33,13 +33,9 @@ Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 
 
 TODO mostanit verzióhoz még:
-- rectangle tool
 - layer and frame methods
 - playback methods
 - playback music
-- move frame contents
-- flip vertically/horizontally
 - undo/redo
 - export
-- rotate 90 deg to right/left
 - layer invisibility

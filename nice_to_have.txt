@@ -35,7 +35,7 @@ Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához.
 TODO mostanit verzióhoz még:
 - layer and frame methods
 - playback methods
+- add music
 - playback music
-- undo/redo
 - export
 - layer invisibility

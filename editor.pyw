@@ -5,6 +5,7 @@ import json
 import webbrowser
 import time
 import codecs
+from copy import deepcopy
 
 import asyncio
 import threading
@@ -55,6 +56,7 @@ PROFILES	= {
 }
 LAYOUT		= {
 	"DEFAULT"	: { # default color scheme
+		"history_size"		: 5,
 		"root"				: "#f0f0f0",
 		"stage"				: "#b0b0b0",
 		"toolbar"			: "#d0d0d0",
@@ -65,6 +67,7 @@ LAYOUT		= {
 		"button"			: "#ffffff",
 		"button-active"		: "#000000",
 		"button-width"		: 30,
+		"button-active-width": 50,
 		"button-height"		: 20,
 		"layer"				: "#d0d0d0",
 		"layer-active"		: "#bbccdd",
@@ -160,6 +163,11 @@ LAYOUT		= {
 				"width"					: 20,
 				"height"				: 20
 			},
+			"back"			: {
+				"src"					: "back.png",
+				"width"					: 20,
+				"height"				: 20
+			},
 			"play"			: {
 				"src"					: "play.png",
 				"width"					: 20,
@@ -167,6 +175,11 @@ LAYOUT		= {
 			},
 			"pause"			: {
 				"src"					: "pause.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"next"			: {
+				"src"					: "next.png",
 				"width"					: 20,
 				"height"				: 20
 			},
@@ -206,6 +219,8 @@ class Application(tk.Frame):
 		self.end_y			= 0
 		self.animation		= self.new_animation() # animation data
 		self.render_cache	= {}
+		self.history		= []
+		self.history_index	= 0
 
 		# images
 		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])
@@ -232,10 +247,10 @@ class Application(tk.Frame):
 			self.create_menubar()
 			self.create_timeline()
 			self.create_stage()
-			self.pack()
 		except Exception as e:
 			self.error("Nem sikerült létrehozni a menüelemeket!",e)
 		
+		self.edit_history_clear()
 		self.render(True)
 		self.root.bind("<Configure>", self.on_resize)
 		self.log("Alkalmazás készen áll")
@@ -244,7 +259,7 @@ class Application(tk.Frame):
 		data				= {
 			"header"			: "QPY",
 			"version"			: self.version,
-			"stage"				: PROFILES["SCH"].copy(),
+			"stage"				: deepcopy(PROFILES["SCH"]),
 			"properties"		: {
 				"title"				: "Ischmeretlen",
 				"team"				: "Schapatnév",
@@ -300,8 +315,10 @@ class Application(tk.Frame):
 		self.root.bind_all("<Control-q>", self.file_quit)
 		
 		self.edit_menu		= tk.Menu(self.menubar, tearoff=0)
-		self.edit_menu.add_command(label = "Visszavonás", command = self.edit_undo, underline=1,accelerator="Ctrl+Z", state=tk.DISABLED)
-		self.root.bind_all("<Control-z>", self.edit_undo)
+		self.edit_menu.add_command(label = "Visszavonás", command = self.edit_history_back, underline=1,accelerator="Ctrl+Z", state=tk.DISABLED)
+		self.root.bind_all("<Control-z>", self.edit_history_back)
+		self.edit_menu.add_command(label = "Újra", command = self.edit_history_forward, underline=1,accelerator="Ctrl+Y", state=tk.DISABLED)
+		self.root.bind_all("<Control-y>", self.edit_history_forward)
 		self.edit_menu.add_separator()
 		self.edit_menu.add_command(label = "Képkocka kivágása", command = self.edit_cut, underline=1,accelerator="Ctrl+X")
 		self.root.bind_all("<Control-x>", self.edit_cut)
@@ -437,10 +454,14 @@ class Application(tk.Frame):
 		self.stage_playback.grid(row=3,column=3)
 		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["rewind"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_rewind)
 		self.stage_playback_rewind.grid(row=0,column=0,sticky="nsw")		
-		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["play"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_toggle)
-		self.stage_playback_toggle.grid(row=0,column=2,sticky="nswe")		
+		self.stage_playback_back = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["back"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_back)
+		self.stage_playback_back.grid(row=0,column=1,sticky="nsw")		
+		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-active-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["play"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_toggle)
+		self.stage_playback_toggle.grid(row=0,column=2,sticky="nswe")
+		self.stage_playback_next = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["next"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_next)
+		self.stage_playback_next.grid(row=0,column=3,sticky="nsw")				
 		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["end"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_end)
-		self.stage_playback_end.grid(row=0,column=3,sticky="nse")		
+		self.stage_playback_end.grid(row=0,column=4,sticky="nse")		
 		
 		self.stage_editor.bind('<Enter>',self.mouse_to_hand)
 		self.stage_preview.bind('<Enter>',self.mouse_to_hand)
@@ -652,6 +673,7 @@ class Application(tk.Frame):
 		self.changes_made	= False
 		self.changes_draw	= False
 		self.animation		= self.new_animation() 
+		self.edit_history_clear()
 		self.refresh_colorpicker()
 		self.render(True)
 		
@@ -680,7 +702,7 @@ class Application(tk.Frame):
 					if data["version"][0]>self.version[0] or data["version"][1]>self.version[1] or data["version"][2]>self.version[2]:
 						# TODO: auto update
 						messagebox.showinfo("Eltérő verziók!", "Ez az animáció egy újabb verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
-					newdata				= data.copy()
+					newdata				= deepcopy(data)
 					newdata["timeline"]	= []
 					for layer in data["timeline"]:
 						frames				= []
@@ -698,6 +720,7 @@ class Application(tk.Frame):
 					self.animation		= newdata
 					self.changes_made	= False
 					self.changes_draw	= False
+					self.edit_history_clear()
 					self.refresh_colorpicker()
 					self.render(True)
 				else:
@@ -761,10 +784,84 @@ class Application(tk.Frame):
 			self.root.destroy()
 		except:
 			pass
+
+	def edit_history_back(self,event=None):
+		if self.history:		
+			if self.history_index>0:
+				self.history_index	-= 1
+				self.animation		= deepcopy(self.history[self.history_index]["data"])
+				self.edit_menu.entryconfigure(0, state=tk.NORMAL)
+				if self.history[self.history_index]["type"]:
+					self.edit_menu.entryconfigure(0, label="Visszavonás: "+self.history[self.history_index]["type"])
+				else:
+					self.edit_menu.entryconfigure(0, label="Visszavonás")
+			if not self.history_index:
+				self.edit_menu.entryconfigure(0, state=tk.DISABLED)
+				self.edit_menu.entryconfigure(0, label="Visszavonás")
+			if self.history_index<len(self.history)-1:
+				self.edit_menu.entryconfigure(1, state=tk.NORMAL)
+				if self.history[(self.history_index+1)]["type"]:
+					self.edit_menu.entryconfigure(1, label="Újra: "+self.history[(self.history_index+1)]["type"])
+				else:
+					self.edit_menu.entryconfigure(1, label="Újra")
+			else:
+				self.edit_menu.entryconfigure(1, state=tk.DISABLED)
+			self.refresh_colorpicker()
+			self.render(True)
 	
-	def edit_undo(self,event=None):
-		self.log("Undo/Redo")
+	def edit_history_forward(self,event=None):
+		if self.history:		
+			if self.history_index<len(self.history)-1:
+				if self.history[self.history_index]["type"]:
+					self.edit_menu.entryconfigure(1, label="Újra: "+self.history[self.history_index]["type"])
+				else:
+					self.edit_menu.entryconfigure(1, label="Újra")
+				self.history_index	+= 1
+				self.animation		= deepcopy(self.history[self.history_index]["data"])
+				self.edit_menu.entryconfigure(1, state=tk.NORMAL)
+			if self.history_index>=len(self.history)-1:
+				self.edit_menu.entryconfigure(1, state=tk.DISABLED)
+				self.edit_menu.entryconfigure(1, label="Újra")
+			if self.history_index>0:
+				self.edit_menu.entryconfigure(0, state=tk.NORMAL)
+				if self.history[(self.history_index)]["type"]:
+					self.edit_menu.entryconfigure(0, label="Visszavonás: "+self.history[(self.history_index)]["type"])
+				else:
+					self.edit_menu.entryconfigure(0, label="Visszavonás")
+			else:
+				self.edit_menu.entryconfigure(0, state=tk.DISABLED)
+			self.refresh_colorpicker()
+			self.render(True)
 		
+	def edit_history_add(self,type=""):
+		if not LAYOUT["DEFAULT"]["history_size"]:
+			self.history	= []
+		elif LAYOUT["DEFAULT"]["history_size"]:
+			self.history		= self.history[:self.history_index+1]
+			self.history.append({
+				"type": type,
+				"data": deepcopy(self.animation)
+			})
+			self.history	= deepcopy(self.history[-(LAYOUT["DEFAULT"]["history_size"]+1):])
+		self.history_index	= len(self.history)-1
+		if self.history:
+			self.edit_menu.entryconfigure(0, state=tk.NORMAL)
+			if type:
+				self.edit_menu.entryconfigure(0, label="Visszavonás: "+type)
+			else:
+				self.edit_menu.entryconfigure(0, label="Visszavonás")
+			self.edit_menu.entryconfigure(1, state=tk.DISABLED)
+			self.edit_menu.entryconfigure(1, label="Újra")
+		
+	def edit_history_clear(self):
+		self.history		= []
+		self.history_index	= 0
+		self.edit_history_add()
+		self.edit_menu.entryconfigure(0, state=tk.DISABLED)
+		self.edit_menu.entryconfigure(0, label="Visszavonás")
+		self.edit_menu.entryconfigure(1, state=tk.DISABLED)
+		self.edit_menu.entryconfigure(1, label="Újra")
+	
 	def edit_cut(self,event=None):
 		self.log("Cut")
 	
@@ -816,6 +913,7 @@ class Application(tk.Frame):
 	def properties_update(self,data):
 		for key in data:
 			self.animation["properties"][key] = data[key]
+		self.edit_history_add("tulajdonságok szerkesztése")
 		self.render(True)
 		
 	def properties_stage(self,event=None):
@@ -916,6 +1014,8 @@ class Application(tk.Frame):
 			elif self.tool=="rectangle":
 				self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,True)
 				return
+		if self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
+			self.edit_history_add("ceruza eszköz")
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -980,6 +1080,8 @@ class Application(tk.Frame):
 			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
 		elif self.tool=="rectangle":
 			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
+		elif self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
+			self.edit_history_add("ceruza eszköz")
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -1035,6 +1137,8 @@ class Application(tk.Frame):
 			self.line(self.end_x,self.end_y,self.is_m1_down,False,False)
 		elif self.tool=="rectangle":
 			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
+		elif self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
+			self.edit_history_add("ceruza eszköz")
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
@@ -1091,7 +1195,7 @@ class Application(tk.Frame):
 		select	= min(self.animation["properties"]["selected_frame"],len(layer["frames"])-1)
 		if layer["frames"][select]["type"]=="link":
 			select	= layer["frames"][select]["data"]
-		frame	= layer["frames"][select]["data"].copy()
+		frame	= deepcopy(layer["frames"][select]["data"])
 		return frame, select
 		
 	def zoom(self,inc=True):
@@ -1142,8 +1246,8 @@ class Application(tk.Frame):
 		if is_editor:
 			self.render_editor_helper(x,y,color)
 		else:
-			self.render_preview_helper(x,y,color)			
-	
+			self.render_preview_helper(x,y,color)
+		
 	def move(self,x_delta=0,y_delta=0):
 		frame, select= self.get_frame()
 		if not frame:
@@ -1153,7 +1257,8 @@ class Application(tk.Frame):
 			new_frame[(x+x_delta)]={}
 			for y in frame[x]:
 				new_frame[(x+x_delta)][(y+y_delta)]=frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = new_frame.copy()
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
+		self.edit_history_add("elmozdítás")
 		self.render(True)
 	
 	def flip(self,horizontal=True,render_flip=True):
@@ -1175,9 +1280,10 @@ class Application(tk.Frame):
 			new_frame[(x*x_delta+x_offset)]={}
 			for y in frame[x]:
 				new_frame[(x*x_delta+x_offset)][(y*y_delta+y_offset)]=frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = new_frame.copy()
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
 		if render_flip:
 			self.render(True)
+			self.edit_history_add("tükrözés")
 	
 	def rotate(self,right=True):
 		frame, select= self.get_frame()
@@ -1189,7 +1295,7 @@ class Application(tk.Frame):
 				if y not in transpose:
 					transpose[y]	= {}
 				transpose[y][x]	= frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = transpose.copy()			
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(transpose)
 		self.flip(right,False)
 		if right:
 			self.move(-self.animation["stage"]["width"],0)
@@ -1263,6 +1369,7 @@ class Application(tk.Frame):
 			if not frame:
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
+			self.edit_history_add("vonal eszköz")
 	
 	def rectangle(self,x,y,add=True,is_editor=True,hint=True):
 		if hint:
@@ -1311,6 +1418,7 @@ class Application(tk.Frame):
 			if not frame:
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame	 
+			self.edit_history_add("négyszög eszköz")
 	
 	def fill(self,x,y,add=True,is_editor=True):
 		self.is_m1_down = False
@@ -1319,16 +1427,16 @@ class Application(tk.Frame):
 		self.changes_draw= False
 		frame, select= self.get_frame()
 		min_x, min_y, max_x, max_y 	= 0, 0, self.animation["stage"]["width"], self.animation["stage"]["height"]
-		strange_bug	= {}
 		for _x in frame:
-			if _x not in strange_bug:
-				strange_bug[_x]={}
 			for _y in frame[_x]:
 				min_x	= min(min_x,_x)
 				min_y	= min(min_y,_y)
 				max_x	= max(max_x,_x)
 				max_y	= max(max_y,_y)
-				strange_bug[_x][_y]=frame[_x][_y]
+		min_x	-= 1
+		min_y	-= 1
+		max_x	+= 1
+		max_y	+= 1
 		if x in frame and y in frame[x]:
 			original= frame[x][y]
 		else:
@@ -1339,24 +1447,26 @@ class Application(tk.Frame):
 			replace	= ""
 		if original!=replace:
 			self.fill_break=False
-			strange_bug	= self.fill_flood(strange_bug,x,y,min_x,max_x,min_y,max_y,original,replace)
+			self.loading(True)
+			frame	= self.fill_flood(deepcopy(frame),x,y,min_x,max_x,min_y,max_y,original,replace)
 			if not self.fill_break:
-				if strange_bug:
+				if frame:
 					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "matrix"
 				else:
 					self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
-				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = strange_bug.copy()
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(frame)
+				self.edit_history_add("festékes vödör")
+			self.loading(False)
 		self.cursor("hand2")
 	
 	# based on https://stackoverflow.com/questions/19839947/flood-fill-in-python
 	def fill_flood(self,frame,x,y,min_x,max_x,min_y,max_y,original,replace):
-		if frame is False or self.fill_break:
-			self.fill_break=True
-			return frame
-		if x<min_x or x>=max_x or y<min_y or y>=max_y:
-			if original=="":
+		if self.fill_break:
+			return deepcopy(frame)
+		if original=="":
+			if x<min_x or x>=max_x or y<min_y or y>=max_y:
 				self.fill_break=True
-				return frame
+				return deepcopy(frame)
 		if (original=="" and (x not in frame or (x in frame and y not in frame[x]))) or (x in frame and y in frame[x] and frame[x][y] == original):
 			if x not in frame:
 				frame[x]={}
@@ -1365,16 +1475,16 @@ class Application(tk.Frame):
 			else:
 				del frame[x][y]			
 			if x >= min_x:
-				frame	= self.fill_flood(frame.copy(),x-1,y,min_x,max_x,min_y,max_y,original,replace)
+				frame	= self.fill_flood(deepcopy(frame),x-1,y,min_x,max_x,min_y,max_y,original,replace)
 			if x < max_x:
-				frame	= self.fill_flood(frame.copy(),x+1,y,min_x,max_x,min_y,max_y,original,replace)
+				frame	= self.fill_flood(deepcopy(frame),x+1,y,min_x,max_x,min_y,max_y,original,replace)
 			if y >= min_y:
-				frame 	= self.fill_flood(frame.copy(),x,y-1,min_x,max_x,min_y,max_y,original,replace)
+				frame 	= self.fill_flood(deepcopy(frame),x,y-1,min_x,max_x,min_y,max_y,original,replace)
 			if y < max_y:
-				frame	= self.fill_flood(frame.copy(),x,y+1,min_x,max_x,min_y,max_y,original,replace)
+				frame	= self.fill_flood(deepcopy(frame),x,y+1,min_x,max_x,min_y,max_y,original,replace)
 			if x in frame and not frame[x]:
 				del frame[x]
-		return frame.copy()
+		return deepcopy(frame)
 	
 	def button_tool(self,parameter):
 		if parameter in LAYOUT["DEFAULT"]["tools"]:
@@ -1394,9 +1504,9 @@ class Application(tk.Frame):
 			self.animation["stage"]["palette"][self.color]	= new_color[1]
 			self.stage_colorpicker_buttons[self.color+1].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
 		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
+		self.edit_history_add("színkeverés")
 
 	### OTHER 
-	
 	def refresh_colorpicker(self):
 		for i, color in enumerate(self.animation["stage"]["palette"]):
 			self.stage_colorpicker_buttons[i+1].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)

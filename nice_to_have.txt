@@ -16,6 +16,7 @@ Az alábbi funkciók várhatók még a következõ verziókban:
 
 Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 - Több layer hozzáadása.
+- Layer láthatóság és renderelés ki-, bekapcsolása
 - Layer blending mode-ok implementálása (lighten, darken, stb.)
 - Alfa csatorna (átlátszóság) hozzáadása.
 - Lasszó eszköz a képkocka részeinek kijelöléséhez és kivágás/másolás/beillesztéséhez.
@@ -33,9 +34,8 @@ Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 
 
 TODO mostanit verzióhoz még:
-- layer and frame methods
 - playback methods
 - add music
 - playback music
-- export
-- layer invisibility
+- autosave in case of crash
+- get_frame return empty on error

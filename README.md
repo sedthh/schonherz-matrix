@@ -39,6 +39,8 @@ Az eszköztár eszközeinek segítségével a színpadra és az előnézeti abla
 
 A rétegek között kattintással vagy a tabulátorral tudsz váltani. A nem aktív rétegek félig átlátszóak lesznek a szerkesztőablakban, hogy megkönnyítsék az animálást. 
 
+A kijelölés, kivágás, másolás és beillesztés csak képkockákra és a teljes tartalmaikra matrix/releasesködik (egyszerre több képkocka vagy a rajz csak egy adott részterüllete nem jelölhető ki). Másolni és beilleszteni képkockát egyszerre megnyitott szerkesztők között is lehet, de bezáráskor a vágólap tartalma törlődni fog. 
+
 Mozgatni rajzot a nyilakkal és a transzformációs menü mozgatási parancsaival lehet. A transzformációk között elérhető tükrözés és forgatás is. A szerkesztés megkönnyítésére a legtöbb funkcióhoz elérhetők billentyűparancsok is. 
 
 **PROTIP:** Ha esetleg idén is tetriszt, snake-et, pohárból elfogyó sört vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.

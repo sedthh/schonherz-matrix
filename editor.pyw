@@ -99,7 +99,7 @@ LAYOUT		= {
 		"palette-active-width"	: 40,
 		"palette-active-height"	: 20,
 		"images"			: {
-			"icon"			: {
+			"icon"				: {
 				"src"					: "icon.png",
 				"width"					: 64,
 				"height"				: 64
@@ -261,10 +261,10 @@ class Application(tk.Frame):
 			try:
 				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT[self.skin]["images"][img]["src"]),width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
 			except:
-				notfound.append(self.animation["stage"]["images"][img]["src"])
+				notfound.append(LAYOUT[self.skin]["images"][img]["src"])
 				self.images[img]	= tk.PhotoImage(width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
 		if notfound:
-			self.error("A keresett fájl nem található!","Nem található(k): "+",".join(notfouund))
+			self.error("A keresett fájl nem található!","Nem található(k): "+",".join(notfound))
 		
 		# generate editor window
 		self.root.minsize(self.width,self.height)

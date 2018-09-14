@@ -56,7 +56,7 @@ PROFILES	= {
 							],
 		"images"			: {
 			"preview"				: {
-				"src"					: "sch.png",
+				"src"					: "sch.gif",
 				"width"					: 300,
 				"height"				: 420
 			}
@@ -100,107 +100,107 @@ LAYOUT		= {
 		"palette-active-height"	: 20,
 		"images"			: {
 			"icon"				: {
-				"src"					: "icon.png",
+				"src"					: "icon.gif",
 				"width"					: 64,
 				"height"				: 64
 			},
 			"pencil"			: {
-				"src"					: "pencil.png",
+				"src"					: "pencil.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"pencil-active"		: {
-				"src"					: "pencil-active.png",
+				"src"					: "pencil-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"line"				: {
-				"src"					: "line.png",
+				"src"					: "line.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"line-active"		: {
-				"src"					: "line-active.png",
+				"src"					: "line-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"rectangle"			: {
-				"src"					: "rectangle.png",
+				"src"					: "rectangle.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"rectangle-active"			: {
-				"src"					: "rectangle-active.png",
+				"src"					: "rectangle-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"fill"				: {
-				"src"					: "fill.png",
+				"src"					: "fill.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"fill-active"		: {
-				"src"					: "fill-active.png",
+				"src"					: "fill-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"picker"			: {
-				"src"					: "picker.png",
+				"src"					: "picker.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"picker-active"		: {
-				"src"					: "picker-active.png",
+				"src"					: "picker-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"zoom"				: {
-				"src"					: "zoom.png",
+				"src"					: "zoom.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"zoom-active"		: {
-				"src"					: "zoom-active.png",
+				"src"					: "zoom-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"palette"			: {
-				"src"					: "palette.png",
+				"src"					: "palette.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"palette-active"	: {
-				"src"					: "palette-active.png",
+				"src"					: "palette-active.gif",
 				"width"					: 40,
 				"height"				: 20
 			},
 			"rewind"			: {
-				"src"					: "rewind.png",
+				"src"					: "rewind.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"back"			: {
-				"src"					: "back.png",
+				"src"					: "back.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"play"			: {
-				"src"					: "play.png",
+				"src"					: "play.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"pause"			: {
-				"src"					: "pause.png",
+				"src"					: "pause.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"next"			: {
-				"src"					: "next.png",
+				"src"					: "next.gif",
 				"width"					: 20,
 				"height"				: 20
 			},
 			"end"			: {
-				"src"					: "end.png",
+				"src"					: "end.gif",
 				"width"					: 20,
 				"height"				: 20
 			},

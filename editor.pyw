@@ -2065,10 +2065,10 @@ class Application(tk.Frame):
 					with codecs.open(file, "w", "utf-8-sig") as f:
 						f.write(output)
 				except Exception as e:
-					return error("Nem sikerült menteni a fájlt!",e)
+					return self.error("Nem sikerült menteni a fájlt!",e)
 				messagebox.showinfo("Exportálás sikeres" , "Az animáció konvertálása sikeres volt.")			
 			except Exception as e:
-				return error("Hiba exportálás közben!",e)
+				return self.error("Hiba exportálás közben!",e)
 		self.loading(False)
 
 if __name__ == "__main__":

@@ -32,22 +32,22 @@ A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) progr
 
 *Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 
-![editor snapshot](images/editor.png)
+![editor snapshot](images/editor.gif)
 
 ## Szerkesztés
 Az eszköztár eszközeinek segítségével a színpadra és az előnézeti ablakra is lehet rajzolni. A rajzok a kijelölt réteg, kijelölt képkockáján belül jelennek meg. Rajzolni az egér bal gombjával, törölni a jobb gombjával lehet. 
 
-![pencil tool](images/pencil.png) ceruza eszköz: bal egérgombbal rajzolni, jobbal törölni tudsz
+![pencil tool](images/pencil.gif) ceruza eszköz: bal egérgombbal rajzolni, jobbal törölni tudsz
 
-![line tool](images/line.png) vonal eszköz: bal egérgombbal vonalat rajzolni, jobbal vonal alakban törölni lehet felengedés után
+![line tool](images/line.gif) vonal eszköz: bal egérgombbal vonalat rajzolni, jobbal vonal alakban törölni lehet felengedés után
 
-![rectangle tool](images/rectangle.png) négyszög eszköz: bal egérgombbal négyszöget rajzolni, jobbal négyszög alakban törölni lehet felengedés után
+![rectangle tool](images/rectangle.gif) négyszög eszköz: bal egérgombbal négyszöget rajzolni, jobbal négyszög alakban törölni lehet felengedés után
 
-![fill tool](images/fill.png) festékes vödör eszköz: bal egérgombbal azonos színű területet átszínezni, jobbal azonos színű területet törölni lehet
+![fill tool](images/fill.gif) festékes vödör eszköz: bal egérgombbal azonos színű területet átszínezni, jobbal azonos színű területet törölni lehet
 
-![picker tool](images/picker.png) színválasztó eszköz: adott terület színét lehet felvenni a használatban lévő szín helyére (az előnézeti képen minden réteget figyelembe vesz, a szerkesztő felületen csak az aktuális réteg pixeleit), bal egérgomb használatakor átvált ceruzára
+![picker tool](images/picker.gif) színválasztó eszköz: adott terület színét lehet felvenni a használatban lévő szín helyére (az előnézeti képen minden réteget figyelembe vesz, a szerkesztő felületen csak az aktuális réteg pixeleit), bal egérgomb használatakor átvált ceruzára
 
-![zoom tool](images/zoom.png) nagyító eszköz: bal egérgombbal a szerkesztő felülletet nagyítani, jobbal kicsinyíteni lehet (előnézeti képen nincs hatása)
+![zoom tool](images/zoom.gif) nagyító eszköz: bal egérgombbal a szerkesztő felülletet nagyítani, jobbal kicsinyíteni lehet (előnézeti képen nincs hatása)
 
 A rétegek között kattintással vagy a tabulátorral tudsz váltani. A nem aktív rétegek félig átlátszóak lesznek a szerkesztőablakban, hogy megkönnyítsék az animálást. 
 

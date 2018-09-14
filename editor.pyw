@@ -34,6 +34,9 @@ PROFILES	= {
 		"background-color"	: "#000000",
 		"border-color"		: "#dddddd",
 		"skybox-color"		: "#0f1114",
+		"font-color"		: "#ffffff",
+		"font-x"			: 150,
+		"font-y"			: 15,
 		"offset_x"			: 29,
 		"offset_y"			: 109,
 		"size_x"			: 5,
@@ -230,10 +233,15 @@ class Application(tk.Frame):
 		self.end_y			= 0
 		self.animation		= self.new_animation() # animation data
 		self.render_cache	= {}
+		self.pixel_cache	= {}
+		self.building		= None
+		self.timer			= None
+		self.duration		= 0
 		self.history		= []
 		self.history_index	= 0
 		self.history_events	= 0
 		self.audio			= None
+		self.block_hotkeys	= False
 
 		# images
 		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])	
@@ -305,12 +313,6 @@ class Application(tk.Frame):
 				}]
 			})
 		return data
-	
-	def int2hex(n):
-		return str(hex(n)).format(16746513).replace("0x","#",1)
-		
-	def hex2int(n):
-		return int(n.replace("#","0x",1),16)
 	
 	def create_menubar(self):		
 		self.menubar		= tk.Menu(self.root)
@@ -615,7 +617,13 @@ class Application(tk.Frame):
 								if x>=0 and x<p_width and y>=0 and y<p_height:
 									if x not in self.render_cache:
 										self.render_cache[x]	= {}
-									self.render_cache[x][y]	= frame[x][y]
+									if play:
+										if y in self.render_cache[x] and self.render_cache[x][y]==frame[x][y]:
+											self.render_cache[x][y]	= ""
+										else:
+											self.render_cache[x][y]	= frame[x][y]
+									else:
+										self.render_cache[x][y]	= frame[x][y]
 					if not play:
 						if is_empty:
 							layer["frames"][select]["type"]="empty"
@@ -632,18 +640,40 @@ class Application(tk.Frame):
 		
 		if redraw:
 			self.stage_preview.delete("all")
-			if not play:
-				self.stage_preview.create_image(int(self.animation["stage"]["images"]["preview"]["width"]/2),height-int(self.animation["stage"]["images"]["preview"]["height"]/2),image=self.images["preview"])
+			self.building=self.stage_preview.create_image(int(self.animation["stage"]["images"]["preview"]["width"]/2),height-int(self.animation["stage"]["images"]["preview"]["height"]/2),image=self.images["preview"])
+			self.timer	= self.stage_preview.create_text(self.animation["stage"]["font-x"],self.animation["stage"]["font-y"],fill=self.animation["stage"]["font-color"],font="system 10", text="00:00 - 00:00")
+			d			= self.animation_length()*self.animation["stage"]["speed"]/1000
+			min			= int(d/60)
+			sec			= int(d-min*60)
+			self.duration=str(min).zfill(2)+":"+str(sec).zfill(2)
 			#self.stage_preview.create_rectangle(0, height, width, self.stage_preview.winfo_height(), fill=LAYOUT[self.skin]["toolbar"], outline="")
-		for x in range(self.animation["stage"]["width"]):
-			for y in range(self.animation["stage"]["height"]):
-				px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
-				py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
-				if x in self.render_cache and y in self.render_cache[x]:
-					color	= self.render_cache[x][y]
-				else:
-					color	= self.animation["stage"]["background-color"]				
-				self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
+		if not play:
+			for x in range(self.animation["stage"]["width"]):
+				for y in range(self.animation["stage"]["height"]):
+					px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
+					py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
+					if x in self.render_cache and y in self.render_cache[x]:
+						color	= self.render_cache[x][y]
+					else:
+						color	= self.animation["stage"]["background-color"]				
+					if x not in self.pixel_cache:
+						self.pixel_cache[x]	= {}
+					self.pixel_cache[x][y]	= self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
+		else:
+			for x in range(self.animation["stage"]["width"]):
+				for y in range(self.animation["stage"]["height"]):
+					if x in self.render_cache and y in self.render_cache[x]:
+						color	= self.render_cache[x][y]
+					else:
+						color	= self.animation["stage"]["background-color"]		
+					if color:
+						self.stage_preview.itemconfig(self.pixel_cache[x][y],fill=color)
+		if self.timer:		
+			d			= self.animation["properties"]["selected_frame"]*self.animation["stage"]["speed"]/1000
+			min			= int(d/60)
+			sec			= int(d-min*60)
+			timestamp	= str(min).zfill(2)+":"+str(sec).zfill(2)
+			self.stage_preview.itemconfig(self.timer,text=timestamp+" - "+self.duration)
 
 	def render_editor_helper(self,x,y,color):
 		size	= max(1,self.animation["properties"]["zoom"])
@@ -979,11 +1009,15 @@ class Application(tk.Frame):
 		self.render(True)
 	
 	def edit_remove(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.remove_frame(self.animation["properties"]["selected_frame"])
 		self.edit_history_add("képkocka törlése")
 		self.render(True)
 	
 	def edit_empty(self,event=None):
+		if self.block_hotkeys:
+			return
 		if self.animation["properties"]["selected_frame"]<len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]):
 			if self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["properties"]["selected_frame"]]["type"]=="link":
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["properties"]["selected_frame"]]["data"]]={"type":"empty","data":{}}
@@ -1019,6 +1053,7 @@ class Application(tk.Frame):
 	###
 	
 	def properties_animation(self,event=None):
+		self.block_hotkeys	= True
 		self.properties_window= tk.Toplevel(self.root)
 		self.properties_window.wm_title("Beállítások")
 		l_title	= tk.Label(self.properties_window,text="Animáció címe:")
@@ -1033,9 +1068,14 @@ class Application(tk.Frame):
 		self.v_team.set(self.animation["properties"]["team"])
 		e_team	= tk.Entry(self.properties_window,textvariable=self.v_team)
 		e_team.grid(row=1,column=1,sticky="we", padx=(10, 20), pady=(0,0))
-		save	= tk.Button(self.properties_window,text="Mentés",command=lambda:[self.properties_update({"title":self.v_title.get(),"team":self.v_team.get()}),self.properties_window.destroy()])
+		save	= tk.Button(self.properties_window,text="Mentés",command=lambda:[self.properties_update({"title":self.v_title.get(),"team":self.v_team.get()}),self.properties_quit()])
 		save.grid(row=2,column=1,sticky="we", padx=(10,20), pady=(10,10))
-	
+		self.properties_window.protocol("WM_DELETE_WINDOW", self.properties_quit)
+		
+	def properties_quit(self,event=None):
+		self.block_hotkeys	= False
+		self.properties_window.destroy()
+		
 	def properties_update(self,data):
 		for key in data:
 			self.animation["properties"][key] = data[key]
@@ -1083,35 +1123,50 @@ class Application(tk.Frame):
 			self.playback_play()
 	
 	def playback_play(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.stage_playback_toggle.configure(image=self.images["pause"])
 		self.is_playing		= True
 		self.music(True)
-		self.async_run(self.async_play())
+		#self.async_run(self.async_play())
+		self.async_play()
 	
 	def playback_pause(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.stage_playback_toggle.configure(image=self.images["play"])
 		self.is_playing		= False
 		self.music(False)
 		self.render(True)
 		
 	def playback_stop(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.playback_pause()
 		self.playback_rewind()
 	
 	def playback_rewind(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.animation["properties"]["selected_frame"]	= 0
 		self.render(True)
 	
 	def playback_end(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.playback_pause()
 		self.animation["properties"]["selected_frame"]	= max(0,animation_length()-1)
 		self.render(True)
 		
 	def playback_back(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.animation["properties"]["selected_frame"]	= self.get_prev()
 		self.render(True)
 	
 	def playback_next(self,event=None):
+		if self.block_hotkeys:
+			return
 		self.animation["properties"]["selected_frame"]	= self.get_next()
 		self.render(True)
 	
@@ -1390,7 +1445,6 @@ class Application(tk.Frame):
 		else:
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
 				
-		
 	def remove_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		if position<len(layer["frames"]):
@@ -1506,9 +1560,6 @@ class Application(tk.Frame):
 		self.cursor("hand2")
 	
 	def picker(self,x,y,is_editor=True):
-		self.is_m1_down	= False
-		self.is_m3_down	= False
-		self.changes_draw= False
 		if is_editor:
 			frame, select= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
 			if x in frame and y in frame[x]:
@@ -1518,6 +1569,11 @@ class Application(tk.Frame):
 				self.animation["stage"]["palette"][self.color]	= self.render_cache[x][y]
 		self.refresh_colorpicker()
 		self.cursor("hand2")
+		if self.is_m1_down:
+			self.button_tool(LAYOUT[self.skin]["tools"][0])
+		self.is_m1_down	= False
+		self.is_m3_down	= False
+		self.changes_draw= False
 	
 	def pencil(self,x,y,add=True,is_editor=True):
 		if add:
@@ -1817,6 +1873,8 @@ class Application(tk.Frame):
 		self.color	= 0
 	
 	def change_layer(self,event=None):
+		if self.block_hotkeys:
+			return	
 		self.animation["properties"]["selected_layer"] = (self.animation["properties"]["selected_layer"]+1)%len(self.animation["timeline"])
 		self.render(True)
 	
@@ -1865,10 +1923,12 @@ class Application(tk.Frame):
 				self.audio		= vlc.MediaPlayer(self.animation["properties"]["music"])
 				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
 				self.properties_menu.entryconfigure(3, label="Zene: "+file)
-				return
 			else:
 				self.error("Nem található az MP3 fájl.","A megadott mp3 nem található:\n"+self.animation["properties"]["music"])
-		self.properties_menu.entryconfigure(3, label="Zene betöltése")
+				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
+				self.properties_menu.entryconfigure(3, label="Zene nem található: "+file)
+		else:
+			self.properties_menu.entryconfigure(3, label="Zene betöltése")
 		
 	def loading(self,update=True):
 		self.is_loading		= update
@@ -1893,37 +1953,47 @@ class Application(tk.Frame):
 	def async_run(self,func):
 		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
 	
-	async def async_play(self):
+	def async_play(self):
 		timestamp	= time.time()
 		length		= self.animation_length()
 		speed		= self.animation["stage"]["speed"]/1000
 		start		= self.animation["properties"]["selected_frame"]
 		start_time	= start*speed
-		cnt			= 0
+		self.stage_preview.delete(self.building)
 		if self.audio:
-			await asyncio.sleep(min(500,speed*2))
+			#await asyncio.sleep(min(500,speed*2))
+			time.sleep(min(500,speed*2))
 		while True:
 			if not self.is_playing:
 				self.animation["properties"]["selected_frame"]	= start
+				self.render(True)
 				return
 			current		= time.time()
 			if timestamp<(current-speed):
-				timestamp	+= speed
-				self.animation["properties"]["selected_frame"]+=1
+				lag			= 0
+				while timestamp<current:
+					timestamp	+= speed
+					lag			+= 1
+				self.animation["properties"]["selected_frame"]+=lag
 				if self.animation["properties"]["selected_frame"]>=length:
 					self.animation["properties"]["selected_frame"]	= start
 					self.playback_pause()
 					return
-				self.render_frames(False)
-				#self.render_editor(True,True)
-				self.render_preview(bool(cnt%5==0),True)
-				cnt			+= 1
-				if self.audio is not None:
-					if self.audio.get_length():
-						position 	= self.audio.get_length()*self.audio.get_position()
-						if position<(self.animation["properties"]["selected_frame"]-3)*self.animation["stage"]["speed"] or position>(self.animation["properties"]["selected_frame"]+2)*self.animation["stage"]["speed"]:
-							percentage	= self.animation["properties"]["selected_frame"]*self.animation["stage"]["speed"]/self.audio.get_length()
-							self.audio.set_position(percentage)
+				#self.render_frames(False)
+				self.render_editor(True,True)
+				self.render_preview(False,True)
+				self.root.update()
+				try:
+					if self.audio is not None:
+						if self.audio.get_length():
+							position 	= self.audio.get_length()*self.audio.get_position()
+							if position<(self.animation["properties"]["selected_frame"]-3)*self.animation["stage"]["speed"] or position>(self.animation["properties"]["selected_frame"]+2)*self.animation["stage"]["speed"]:
+								percentage	= self.animation["properties"]["selected_frame"]*self.animation["stage"]["speed"]/self.audio.get_length()
+								self.audio.set_position(percentage)
+				except:
+					pass
+			time.sleep(int(speed/20))
+			#await asyncio.sleep(int(speed/20))
 
 	async def async_render(self,event=None):
 		try:

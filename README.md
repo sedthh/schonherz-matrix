@@ -10,16 +10,26 @@ A **QPY** egy LED fal animáció szerkesztő alkalmazás, amely a [Schönherz QP
 3. [Exportálás](#exportálás)
 	
 ## Installálás
-A fájlok között nincs futtatható **exe** csak egy *editor.pyw* fájl. A futtatáshoz szükség van [Python3.6+](https://www.python.org/downloads/) környezetre (Windows, MacOs X és Linux alatt is elérhető). Ezen felül az alábbi csomagok telepítésére van még szükség (Windows alatt írd be ezeket a parancssorban. MacOs X és Linux alatt lehet, hogy elé kell írnod, hogy "sudo"):
+
+Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/archive/master.zip)** és csomagold ki a benne található **qpy.zip** fájlt. A mappában lévő **editor.exe** megnyitásával indul a szerkesztő.
+
+**VAGY** 
+
+Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzióját és futtasd a forráskódot (ez Windows mellett MacOs X és Linux alatt is elérhető). A python kód futtatásához még a [VLC letöltésére](https://www.videolan.org/vlc/index.html) és az alábbi csomagok telepítésére van szükség (Windows alatt írd be ezeket a parancssorba. MacOs X és Linux alatt lehet, hogy elé kell írnod, hogy "sudo"):
+
 ```python
 > pip3 install asynchio
 > pip3 install tkinter
 > pip3 install python-vlc
 ```
-A szükséges könyvtárak telepítése után a szerkesztő python (\*.py vagy \*.pyw) fájljai futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
+A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
 ```python
 > python editor.pyw
 ```
+
+![editor snapshot](images/editor.png)
+
+*Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 
 ## Szerkesztés
 Az eszköztár eszközeinek segítségével a színpadra és az előnézeti ablakra is lehet rajzolni. A rajzok a kijelölt réteg, kijelölt képkockáján belül jelennek meg. Rajzolni az egér bal gombjával, törölni a jobb gombjával lehet. 
@@ -42,11 +52,9 @@ A kijelölés, kivágás, másolás és beillesztés csak képkockákra és a te
 
 Mozgatni rajzot a nyilakkal és a transzformációs menü mozgatási parancsaival lehet. A transzformációk között elérhető tükrözés és forgatás is. A szerkesztés megkönnyítésére a legtöbb funkcióhoz elérhetők billentyűparancsok is. 
 
-A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *AniimEditor2012* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on.
-
 **PROTIP:** *Ha esetleg idén is tetriszt, snake-et, pohárból elfogyó sört vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.*
 
-## Exportálás
-A szerkesztő fájljai (\*.qpy) eltérnek az eddig használt *AnimEditor2012* fájljaitól (\*.qp4). A QPA FTP-re való feltöltéshez először exportálni kell a kész animációt, a formátumok közötti átkonvertáláshoz. Az exportálás után létrejövő fájl már megnyitható a régi szerkesztőben is és feltölthető a QPA FTP-re. 
+A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *AniimEditor2012* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 
-*Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
+## Exportálás
+A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt. Az exportálás után létrejövő fájl már megnyitható az eddig használt *AnimEditor2012* szerkesztőben is. 

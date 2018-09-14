@@ -5,14 +5,13 @@ Az alábbi funkciók várhatók még a következõ verziókban:
 - Nyelvi fájlok használata, hogy más nyelveken is elérhetõ legyen az alkalmazás.
 - Témák választása a szerkesztõben. 
 - Átméretezhetõ GUI elemek.
-- Több szintû visszavonás/elõrelépés.
-- Másolás, kivágás és beillesztés külsõ vágólapról. 
 - Több képkocka együttes kijelölésének engedélyezése.
 - Ikonok hozzáadása a menü elemek mellé.
 - Hangsáv képének megjelenítése a szerkesztõben. 
 - Futtatható exe fájlok és egyéb csomagok létrehozása Windows, MacOs és Linux rendszerekhez.
 - Hangerõ szabályozás.
 - Automatikus frissítés újabb verzióra.
+- Automatikus biztonsági mentés.
 
 Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 - Több layer hozzáadása.
@@ -29,13 +28,7 @@ Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 - Elõnézetnél a színprofilok figyelembe vétele és a valóságban elérhetõ LED színek szimulációja. 
 - Elõnézetnél a LED falak hibáinak és zajának szimulálása.
 - Shadow frame (elõzõ képkocka félig átlátszón való) megjelenítése az animáció megkönnyítéséhez.
-- Vonalzó eszköz hozzáadása.
+- Vonalzó eszköz hozzáadása / grid a színpadon.
+- Folyamatjelzõ progress bar exportáláshoz.
 
 Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 
-
-TODO mostanit verzióhoz még:
-- playback methods
-- add music
-- playback music
-- autosave in case of crash
-- get_frame return empty on error

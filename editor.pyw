@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
 
-import sys, os
+import os
 import json
-import webbrowser
 import time
 import codecs
 from copy import deepcopy
+from webbrowser import open as webbrowser_open
 
 import asyncio
 import threading
-from pygame import mixer
+import vlc
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -208,6 +208,7 @@ class Application(tk.Frame):
 		self.width			= 800
 		self.height			= 600
 		self.state			= self.root.wm_state()
+		self.skin			= "DEFAULT"
 		
 		self.changes_made	= False
 		self.changes_draw	= False
@@ -227,9 +228,10 @@ class Application(tk.Frame):
 		self.history		= []
 		self.history_index	= 0
 		self.history_events	= 0
+		self.audio			= None
 
 		# images
-		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])
+		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])	
 		self.images			= {}
 		for img in self.animation["stage"]["images"]:
 			try:
@@ -237,18 +239,17 @@ class Application(tk.Frame):
 			except:
 				self.error("A keresett fájl nem található!","Nem található a(z) "+self.animation["stage"]["images"][img]["src"]+" képfájl.")
 				self.images[img]	= tk.PhotoImage(width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
-		for img in LAYOUT["DEFAULT"]["images"]:
+		for img in LAYOUT[self.skin]["images"]:
 			try:
-				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT["DEFAULT"]["images"][img]["src"]),width=LAYOUT["DEFAULT"]["images"][img]["width"],height=LAYOUT["DEFAULT"]["images"][img]["height"])
+				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT[self.skin]["images"][img]["src"]),width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
 			except:
-				self.error("A keresett fájl nem található!","Nem található a(z) "+LAYOUT["DEFAULT"]["images"][img]["src"]+" képfájl.")
-				self.images[img]	= tk.PhotoImage(width=LAYOUT["DEFAULT"]["images"][img]["width"],height=LAYOUT["DEFAULT"]["images"][img]["height"])
+				self.error("A keresett fájl nem található!","Nem található a(z) "+LAYOUT[self.skin]["images"][img]["src"]+" képfájl.")
+				self.images[img]	= tk.PhotoImage(width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
 		
 		# generate editor window
 		self.root.minsize(self.width,self.height)
-		self.root.configure(background=LAYOUT["DEFAULT"]["root"])
+		self.root.configure(background=LAYOUT[self.skin]["root"])
 		self.root.protocol("WM_DELETE_WINDOW", self.file_quit)
-		
 		try:
 			self.create_menubar()
 			self.create_timeline()
@@ -261,7 +262,7 @@ class Application(tk.Frame):
 		self.root.bind("<Configure>", self.on_resize)
 		self.root.bind("<FocusIn>", self.on_focus)
 		self.on_focus()
-		self.log("Alkalmazás készen áll")
+		self.music_load()
 	
 	def new_animation(self):
 		data				= {
@@ -279,7 +280,7 @@ class Application(tk.Frame):
 			},
 			"timeline"			: []
 		}
-		while len(data["stage"]["palette"])<LAYOUT["DEFAULT"]["palette-length"]:
+		while len(data["stage"]["palette"])<LAYOUT[self.skin]["palette-length"]:
 			data["stage"]["palette"].append("#ffffff")
 		# TODO: allow the manual addition of multiple layers later
 		for layer in ["Felső réteg","Középső réteg","Hátsó réteg"]:
@@ -400,16 +401,16 @@ class Application(tk.Frame):
 		self.root.bind_all("<Tab>", self.change_layer)
 		
 	def create_timeline(self):
-		height				= LAYOUT["DEFAULT"]["layer-height"]*3+LAYOUT["DEFAULT"]["layer-offset"]
-		self.timeline 		= tk.Frame(self.root, bg=LAYOUT["DEFAULT"]["root"], bd=0, highlightthickness=0)
+		height				= LAYOUT[self.skin]["layer-height"]*3+LAYOUT[self.skin]["layer-offset"]
+		self.timeline 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
 		tk.Grid.columnconfigure(self.timeline, 1, weight=1)
-		self.timeline_layers= tk.Canvas(self.timeline, width=LAYOUT["DEFAULT"]["layer-width"], height=height, bg=LAYOUT["DEFAULT"]["root"], bd=0, highlightthickness=0)
+		self.timeline_layers= tk.Canvas(self.timeline, width=LAYOUT[self.skin]["layer-width"], height=height, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
 		self.timeline_layers.grid(row=0,column=0,sticky="w")
 		self.timeline_frames= tk.Canvas(self.timeline,height=height)
 		self.timeline_frames.grid(row=0,column=1,sticky="wen")
 		self.timeline_scrollbar_h= tk.Scrollbar(self.timeline,orient='horizontal',command=self.timeline_frames.xview)
 		self.timeline_scrollbar_h.grid(row=1,column=1,sticky="wen")
-		self.timeline_frames.config(yscrollcommand = self.timeline_scrollbar_h.set)
+		self.timeline_frames.config(xscrollcommand = self.timeline_scrollbar_h.set)
 		self.timeline.pack(fill=tk.X)
 		self.timeline_layers.bind("<Button-1>",self.mouse_click_layers)
 		self.timeline_frames.bind("<Button-1>",self.mouse_click_frames)
@@ -420,18 +421,18 @@ class Application(tk.Frame):
 		self.timeline_frames.bind("<MouseWheel>", self.mouse_wheel_frames)
 
 	def create_stage(self):
-		self.stage 		= tk.Frame(self.root, bg=LAYOUT["DEFAULT"]["toolbar"], bd=0)
+		self.stage 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["toolbar"], bd=0)
 		tk.Grid.columnconfigure(self.stage, 1, weight=1)
 		tk.Grid.rowconfigure(self.stage, 0, weight=1)
-		self.stage_tools= tk.Frame(self.stage,width=100, bg=LAYOUT["DEFAULT"]["toolbar"], bd=0, highlightthickness=0)
+		self.stage_tools= tk.Frame(self.stage,width=100, bg=LAYOUT[self.skin]["toolbar"], bd=0, highlightthickness=0)
 		self.stage_tools.grid(row=0,column=0,sticky="nswe")
 		self.stage_tools_buttons={}
-		for i,button in enumerate(LAYOUT["DEFAULT"]["tools"]):
-			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images[button],bg=LAYOUT["DEFAULT"]["button"],bd=1)
+		for i,button in enumerate(LAYOUT[self.skin]["tools"]):
+			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images[button],bg=LAYOUT[self.skin]["button"],bd=1)
 			self.stage_tools_buttons[button]["command"]	= lambda workaround=button: self.button_tool(workaround)
-			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUT["DEFAULT"]["toolbar-column"])),column=int(i%LAYOUT["DEFAULT"]["toolbar-column"]),sticky="w")
+			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUT[self.skin]["toolbar-column"])),column=int(i%LAYOUT[self.skin]["toolbar-column"]),sticky="w")
 		
-		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUT["DEFAULT"]["stage"], width=428, height=411, bd=0,highlightthickness=0)
+		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUT[self.skin]["stage"], width=428, height=411, bd=0,highlightthickness=0)
 		self.stage_editor.grid(row=0,column=1,sticky="nswe")
 		self.stage_scrollbar_h= tk.Scrollbar(self.stage,orient='vertical',command=self.stage_editor.yview)
 		self.stage_scrollbar_h.grid(row=0,column=2,sticky="ns")
@@ -443,32 +444,32 @@ class Application(tk.Frame):
 		self.stage_editor.configure(yscrollcommand = self.stage_scrollbar_h.set)
 		self.stage_editor.configure(xscrollcommand = self.stage_scrollbar_w.set)
 		
-		self.stage_colorpicker_padding= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=428, height=LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_colorpicker_padding= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=428, height=LAYOUT[self.skin]["toolbar-padding"])
 		self.stage_colorpicker_padding.grid(row=2,column=1,sticky="nswe")
-		self.stage_colorpicker= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=428, height=LAYOUT["DEFAULT"]["toolbar-height"]-LAYOUT["DEFAULT"]["toolbar-padding"])
+		self.stage_colorpicker= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=428, height=LAYOUT[self.skin]["toolbar-height"]-LAYOUT[self.skin]["toolbar-padding"])
 		self.stage_colorpicker.grid(row=3,column=1,sticky="nswe")
 		self.stage_colorpicker_buttons=[]
 		color	= self.animation["stage"]["palette"][self.color]
-		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT["DEFAULT"]["palette-active-width"],height=LAYOUT["DEFAULT"]["palette-active-height"],image=self.images["palette-active"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-active-width"],height=LAYOUT[self.skin]["palette-active-height"],image=self.images["palette-active"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 		self.stage_colorpicker_buttons[-1]["command"]	= lambda: self.button_colorpicker(-1)
 		self.stage_colorpicker_buttons[-1].grid(row=0,column=0,sticky="w")
-		tk.Frame(self.stage_colorpicker, bg=LAYOUT["DEFAULT"]["toolbar"],width=LAYOUT["DEFAULT"]["palette-width"],height=LAYOUT["DEFAULT"]["palette-height"]).grid(row=0, column=1,sticky="nswe")
+		tk.Frame(self.stage_colorpicker, bg=LAYOUT[self.skin]["toolbar"],width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"]).grid(row=0, column=1,sticky="nswe")
 		for i,color in enumerate(self.animation["stage"]["palette"]):
-			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT["DEFAULT"]["palette-width"],height=LAYOUT["DEFAULT"]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
 			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
 		
-		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT["DEFAULT"]["toolbar"], width=300, height=LAYOUT["DEFAULT"]["toolbar-height"])
+		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=300, height=LAYOUT[self.skin]["toolbar-height"])
 		self.stage_playback.grid(row=3,column=3)
-		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["rewind"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_rewind)
+		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["rewind"],bg=LAYOUT[self.skin]["button"],command=self.playback_rewind)
 		self.stage_playback_rewind.grid(row=0,column=0,sticky="nsw")		
-		self.stage_playback_back = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["back"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_back)
+		self.stage_playback_back = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["back"],bg=LAYOUT[self.skin]["button"],command=self.playback_back)
 		self.stage_playback_back.grid(row=0,column=1,sticky="nsw")		
-		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-active-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["play"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_toggle)
+		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-active-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["play"],bg=LAYOUT[self.skin]["button"],command=self.playback_toggle)
 		self.stage_playback_toggle.grid(row=0,column=2,sticky="nswe")
-		self.stage_playback_next = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["next"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_next)
+		self.stage_playback_next = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["next"],bg=LAYOUT[self.skin]["button"],command=self.playback_next)
 		self.stage_playback_next.grid(row=0,column=3,sticky="nsw")				
-		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUT["DEFAULT"]["button-width"],height=LAYOUT["DEFAULT"]["button-height"],image=self.images["end"],bg=LAYOUT["DEFAULT"]["button"],command=self.playback_end)
+		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["end"],bg=LAYOUT[self.skin]["button"],command=self.playback_end)
 		self.stage_playback_end.grid(row=0,column=4,sticky="nse")		
 		
 		self.stage_editor.bind('<Enter>',self.mouse_to_hand)
@@ -488,32 +489,32 @@ class Application(tk.Frame):
 		self.stage_editor.bind("<MouseWheel>", self.mouse_wheel_stage)
 		self.stage_preview.bind("<MouseWheel>", self.mouse_wheel_stage)
 		
-		self.button_tool(LAYOUT["DEFAULT"]["tools"][0])
+		self.button_tool(LAYOUT[self.skin]["tools"][0])
 	
 	### RENDER ELEMENTS
 	def render_layers(self,redraw=False):
-		offset 			= LAYOUT["DEFAULT"]["layer-offset"]
-		height 			= LAYOUT["DEFAULT"]["layer-height"]-1
-		width			= LAYOUT["DEFAULT"]["layer-width"]-1
+		offset 			= LAYOUT[self.skin]["layer-offset"]
+		height 			= LAYOUT[self.skin]["layer-height"]-1
+		width			= LAYOUT[self.skin]["layer-width"]-1
 		if redraw:
 			self.timeline_layers.delete("all")			
 			for i, layer in enumerate(self.animation["timeline"]):
-				self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT["DEFAULT"]["layer"], outline=LAYOUT["DEFAULT"]["layer-outline"])
-				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUT["DEFAULT"]["layer-outline-highlight"])
-				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUT["DEFAULT"]["layer-outline-highlight"])
-				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT["DEFAULT"]["layer-color"],font="system 10", text=layer["name"],anchor="w")
-			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+				self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer"], outline=LAYOUT[self.skin]["layer-outline"])
+				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
+				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
+				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT[self.skin]["layer-color"],font="system 10", text=layer["name"],anchor="w")
+			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 		try:
 			self.timeline_layers.delete(self.timeline_layers_select)
 		except:
 			pass
-		self.timeline_layers_select	= self.timeline_layers.create_rectangle(1, offset+self.animation["properties"]["selected_layer"]*height+1, width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height-1, fill=LAYOUT["DEFAULT"]["layer-active"], outline="", stipple="gray50")
+		self.timeline_layers_select	= self.timeline_layers.create_rectangle(1, offset+self.animation["properties"]["selected_layer"]*height+1, width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height-1, fill=LAYOUT[self.skin]["layer-active"], outline="", stipple="gray50")
 
 	def render_frames(self,redraw=False):
-		offset 			= LAYOUT["DEFAULT"]["layer-offset"]-1
-		width			= LAYOUT["DEFAULT"]["frame-width"]
-		height			= LAYOUT["DEFAULT"]["layer-height"]
-		max_frames		= self.animation_length() + 10 # extra second visible in editor
+		offset 			= LAYOUT[self.skin]["layer-offset"]-1
+		width			= LAYOUT[self.skin]["frame-width"]
+		height			= LAYOUT[self.skin]["layer-height"]
+		max_frames		= self.animation_length() + 50 # extra 5 seconds visible in editor
 		max_height		= (len(self.animation["timeline"])+1)*height
 		max_width		= max(60,int(self.timeline_frames.winfo_width()/width)+1)
 		if redraw:
@@ -522,51 +523,51 @@ class Application(tk.Frame):
 				last		= ""
 				color		= ""
 				stipple		= ""
-				for i in range(max(max_width,max_frames)+1):
+				for i in range(max(max_width,max_frames*width)+1):
 					if i<len(self.animation["timeline"][j]["frames"]):
 						if self.animation["timeline"][j]["frames"][i]["type"]=="empty":
-							color	= LAYOUT["DEFAULT"]["frame-empty"]
+							color	= LAYOUT[self.skin]["frame-empty"]
 							stipple		= ""
-							outline	= LAYOUT["DEFAULT"]["frame-border"]
+							outline	= LAYOUT[self.skin]["frame-border"]
 						elif self.animation["timeline"][j]["frames"][i]["type"]=="matrix":
-							color	= LAYOUT["DEFAULT"]["frame-matrix"]
+							color	= LAYOUT[self.skin]["frame-matrix"]
 							stipple		= ""
-							outline	= LAYOUT["DEFAULT"]["frame-border"]
+							outline	= LAYOUT[self.skin]["frame-border"]
 						else:
 							color	= last
 							stipple	= "gray50"
-							outline	= LAYOUT["DEFAULT"]["frame-color"]	
+							outline	= LAYOUT[self.skin]["frame-color"]	
 					else:
 						color		= ""
 						stipple	= "gray50"
 						if i==len(self.animation["timeline"][j]["frames"]):
 							self.timeline_frames.create_line(i*width+1, offset+j*height+1, i*width+1, offset+(j+1)*height, fill=outline)
-						outline	= LAYOUT["DEFAULT"]["frame-color"]	
+						outline	= LAYOUT[self.skin]["frame-color"]	
 					last		= color
 					self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
-					self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
+					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
 						if i%10==0:
-							self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT["DEFAULT"]["layer-color"],font="system 10", text=str(int(i/10)))
-							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+							self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="system 10", text=str(int(i/10)))
+							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 						elif i%5==0:
-							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 						else:
-							self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
-			self.timeline_frames.create_line(0, offset, (max(max_width,max_frames)+1)*width+1, offset, fill=LAYOUT["DEFAULT"]["layer-color"])
+							self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+			self.timeline_frames.create_line(0, offset, (max(max_width,max_frames*width)+1)*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 		try:
 			self.timeline_frames.delete(self.timeline_frames_select)
 			self.timeline_frames.delete(self.timeline_frames_select_line)
 			self.timeline_frames.delete(self.timeline_frames_select_frame)
 		except:
 			pass
-		self.timeline_frames_select	= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, 1, (self.animation["properties"]["selected_frame"]+1)*width-1, offset, outline=LAYOUT["DEFAULT"]["frame-active"], fill=LAYOUT["DEFAULT"]["frame-active"], stipple="gray50")
-		self.timeline_frames_select_line= self.timeline_frames.create_line(int(self.animation["properties"]["selected_frame"]*width+width*.5), offset+2, int(self.animation["properties"]["selected_frame"]*width+width*.5), max_height, fill=LAYOUT["DEFAULT"]["frame-active"],stipple="gray25")
-		self.timeline_frames_select_frame= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, offset+self.animation["properties"]["selected_layer"]*height, (self.animation["properties"]["selected_frame"]+1)*width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height, outline=LAYOUT["DEFAULT"]["frame-active"], fill="", stipple="gray50")
+		self.timeline_frames_select	= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, 1, (self.animation["properties"]["selected_frame"]+1)*width-1, offset, outline=LAYOUT[self.skin]["frame-active"], fill=LAYOUT[self.skin]["frame-active"], stipple="gray50")
+		self.timeline_frames_select_line= self.timeline_frames.create_line(int(self.animation["properties"]["selected_frame"]*width+width*.5), offset+2, int(self.animation["properties"]["selected_frame"]*width+width*.5), max_height, fill=LAYOUT[self.skin]["frame-active"],stipple="gray25")
+		self.timeline_frames_select_frame= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, offset+self.animation["properties"]["selected_layer"]*height, (self.animation["properties"]["selected_frame"]+1)*width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height, outline=LAYOUT[self.skin]["frame-active"], fill="", stipple="gray50")
 		self.timeline_frames.configure(scrollregion=(0,0,(max(max_width,max_frames)+10)*width,height))
 		self.timeline_frames.update()
 	
-	def render_editor(self,redraw=False):
+	def render_editor(self,redraw=False,play=False):
 		if redraw:
 			size	= max(1,self.animation["properties"]["zoom"])
 			width	= self.stage_editor.winfo_width()
@@ -575,9 +576,10 @@ class Application(tk.Frame):
 			p_height= self.animation["stage"]["height"]
 			left	= int((width-p_width*size)/2)
 			top		= int((height-p_height*size)/2)
-				
-			self.stage_editor.delete("all")
-			self.stage_editor.create_rectangle(left, top, left+p_width*size, top+p_height*size, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+			
+			if not play:
+				self.stage_editor.delete("all")
+				self.stage_editor.create_rectangle(left, top, left+p_width*size, top+p_height*size, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
 
 			min_x, min_y, max_x, max_y 	= 0, 0, p_width, p_height
 			self.render_cache			= {}
@@ -592,24 +594,27 @@ class Application(tk.Frame):
 					for x in frame:
 						for y in frame[x]:
 							is_empty= False
-							min_x	= min(min_x,x)
-							min_y	= min(min_y,y)
-							max_x	= max(max_x,x)
-							max_y	= max(max_y,y)
-							if layer["visible"]:
-								self.stage_editor.create_rectangle(left+x*size, top+y*size, left+(x+1)*size, top+(y+1)*size, fill=frame[x][y], outline="", stipple=stipple)										
+							if not play:
+								min_x	= min(min_x,x)
+								min_y	= min(min_y,y)
+								max_x	= max(max_x,x)
+								max_y	= max(max_y,y)
+								if layer["visible"]:
+									self.stage_editor.create_rectangle(left+x*size, top+y*size, left+(x+1)*size, top+(y+1)*size, fill=frame[x][y], outline="", stipple=stipple)										
 							if layer["render"]:
 								if x>=0 and x<p_width and y>=0 and y<p_height:
 									if x not in self.render_cache:
 										self.render_cache[x]	= {}
 									self.render_cache[x][y]	= frame[x][y]
-					if is_empty:
-						layer["frames"][select]["type"]="empty"
-					else:
-						layer["frames"][select]["type"]="matrix"		
-			self.stage_editor.configure(scrollregion=((min_x+1)*size,(min_y+1)*size,(max(p_width,max_x-min_x)+1)*size,(max(p_height,max_y-min_y)+1)*size))
+					if not play:
+						if is_empty:
+							layer["frames"][select]["type"]="empty"
+						else:
+							layer["frames"][select]["type"]="matrix"		
+			if not play:
+				self.stage_editor.configure(scrollregion=((min_x+1)*size,(min_y+1)*size,(max(p_width,max_x-min_x)+1)*size,(max(p_height,max_y-min_y)+1)*size))
 	
-	def render_preview(self,redraw=False):
+	def render_preview(self,redraw=False,play=False):
 		width	= self.stage_preview.winfo_width()
 		height	= self.stage_preview.winfo_height()
 		offset_x= self.animation["stage"]["offset_x"]
@@ -617,9 +622,9 @@ class Application(tk.Frame):
 		
 		if redraw:
 			self.stage_preview.delete("all")
-			self.stage_preview.create_image(int(self.animation["stage"]["images"]["preview"]["width"]/2),height-int(self.animation["stage"]["images"]["preview"]["height"]/2),image=self.images["preview"])
-			self.stage_preview.create_rectangle(0, height, width, self.stage_preview.winfo_height(), fill=LAYOUT["DEFAULT"]["toolbar"], outline="")		
-			#self.stage_preview.update()
+			if not play:
+				self.stage_preview.create_image(int(self.animation["stage"]["images"]["preview"]["width"]/2),height-int(self.animation["stage"]["images"]["preview"]["height"]/2),image=self.images["preview"])
+			#self.stage_preview.create_rectangle(0, height, width, self.stage_preview.winfo_height(), fill=LAYOUT[self.skin]["toolbar"], outline="")
 		for x in range(self.animation["stage"]["width"]):
 			for y in range(self.animation["stage"]["height"]):
 				px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
@@ -683,6 +688,7 @@ class Application(tk.Frame):
 		self.animation		= self.new_animation() 
 		self.edit_history_clear()
 		self.refresh_colorpicker()
+		self.music_load()
 		self.render(True)
 		
 	def file_open(self,event=None):
@@ -707,6 +713,8 @@ class Application(tk.Frame):
 					data				= json.loads(data)
 				except Exception as e:
 					return self.error("Hibás vagy sérült fájl!",e)
+				if "header" not in data or data["header"]!=HEADER:
+					return self.error("Nem megfelelő formátum!","A kiválasztott fájl nem Mátrix animáció!")
 				if "version" in data and "stage" in data and "properties" in data and "timeline" in data:
 					if data["version"][0]>self.version[0] or data["version"][1]>self.version[1] or data["version"][2]>self.version[2]:
 						# TODO: auto update
@@ -731,6 +739,7 @@ class Application(tk.Frame):
 					self.changes_draw	= False
 					self.edit_history_clear()
 					self.refresh_colorpicker()
+					self.music_load()
 					self.render(True)
 				else:
 					return self.error("Hibás vagy sérült fájl!","A fájl alapján nem hozható létre animáció.")				
@@ -846,15 +855,15 @@ class Application(tk.Frame):
 			self.render(True)
 		
 	def edit_history_add(self,type=""):
-		if not LAYOUT["DEFAULT"]["history_size"]:
+		if not LAYOUT[self.skin]["history_size"]:
 			self.history	= []
-		elif LAYOUT["DEFAULT"]["history_size"]:
+		elif LAYOUT[self.skin]["history_size"]:
 			self.history		= self.history[:self.history_index+1]
 			self.history.append({
 				"type": type,
 				"data": deepcopy(self.animation)
 			})
-			self.history	= deepcopy(self.history[-(LAYOUT["DEFAULT"]["history_size"]+1):])
+			self.history	= deepcopy(self.history[-(LAYOUT[self.skin]["history_size"]+1):])
 		self.history_index	= len(self.history)-1
 		if self.history:
 			self.edit_menu.entryconfigure(0, state=tk.NORMAL)
@@ -864,6 +873,8 @@ class Application(tk.Frame):
 				self.edit_menu.entryconfigure(0, label="Visszavonás")
 			self.edit_menu.entryconfigure(1, state=tk.DISABLED)
 			self.edit_menu.entryconfigure(1, label="Újra")
+			if len(self.history)>1:
+				self.changes_made	= True
 		self.history_events	+= 1
 		
 	def edit_history_clear(self):
@@ -924,8 +935,7 @@ class Application(tk.Frame):
 			if clipboard["type"]=="cut":
 				if self.history_events==clipboard["events"]:
 					self.animation["timeline"][clipboard["layer"]]["frames"][clipboard["select"]]	= {"type":"empty","data":{}}
-			self.insert_frame(self.animation["properties"]["selected_frame"])
-			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["properties"]["selected_frame"]]	= frame
+			self.overwrite_frame(self.animation["properties"]["selected_frame"],frame)
 			if clipboard["type"]=="cut":
 				self.edit_history_add("kivágás vágólapról")
 			else:
@@ -961,7 +971,7 @@ class Application(tk.Frame):
 	def edit_remove(self,event=None):
 		self.remove_frame(self.animation["properties"]["selected_frame"])
 		self.edit_history_add("képkocka törlése")
-		self.render_frames(True)
+		self.render(True)
 	
 	def edit_empty(self,event=None):
 		if self.animation["properties"]["selected_frame"]<len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]):
@@ -973,15 +983,18 @@ class Application(tk.Frame):
 			self.render(True)
 		
 	def edit_duplicate(self,event=None):
-		if self.animation["properties"]["selected_frame"]<len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]):
-			self.insert_frame_extra(self.animation["properties"]["selected_frame"],self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["properties"]["selected_frame"]])
-			self.edit_history_add("képkocka duplikálása")
-			self.render_frames(True)
-		
+		frame,select	= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
+		if frame:
+			self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"matrix","data":deepcopy(frame)})
+		else:
+			self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"empty","data":{}})
+		self.edit_history_add("képkocka duplikálása")
+		self.render_frames(True)
+	
 	def edit_insert_empty(self,event=None):
 		self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"empty","data":{}})
 		self.edit_history_add("üres képkocka beszúrása")
-		self.render_frames(True)
+		self.render(True)
 		
 	def edit_extend(self,event=None):
 		self.extend_frame(self.animation["properties"]["selected_frame"])
@@ -1023,8 +1036,11 @@ class Application(tk.Frame):
 		self.log("Stage properties disabled")
 		
 	def properties_music(self,event=None):
-		# TODO
-		self.log("Music properties")
+		self.root.update()
+		file				= askopenfilename(defaultextension="*.mp3",initialdir="C:/Documents/",filetypes =(("MP3 hangfájlok", "*.mp3"),),title = "Hangfájl hozzáadása")
+		if file:
+			self.animation["properties"]["music"]	= file
+			self.music_load()
 	
 	def transform_rotate_right(self,event=None):
 		self.rotate(True)
@@ -1057,14 +1073,16 @@ class Application(tk.Frame):
 			self.playback_play()
 	
 	def playback_play(self,event=None):
-		# TODO
 		self.stage_playback_toggle.configure(image=self.images["pause"])
 		self.is_playing		= True
+		self.music(True)
+		self.async_run(self.async_play())
 	
 	def playback_pause(self,event=None):
-		# TODO
 		self.stage_playback_toggle.configure(image=self.images["play"])
 		self.is_playing		= False
+		self.music(False)
+		self.render(True)
 		
 	def playback_stop(self,event=None):
 		self.playback_pause()
@@ -1080,25 +1098,16 @@ class Application(tk.Frame):
 		self.render(True)
 		
 	def playback_back(self,event=None):
-		# TODO
-		self.log("Back")
+		self.animation["properties"]["selected_frame"]	= self.get_prev()
+		self.render(True)
 	
 	def playback_next(self,event=None):
-		# TODO
-		self.log("Next")
+		self.animation["properties"]["selected_frame"]	= self.get_next()
+		self.render(True)
 	
 	def other_about(self,event=None):
-		toplevel			= tk.Toplevel(self)
-		toplevel.geometry('480x130')
-		label1 				= tk.Label(toplevel, text=TITLE,font=("Helvetica", 16),pady=3)
-		label2 				= tk.Label(toplevel, text=VERSION.title(),font=("Helvetica", 12))
-		label3 				= tk.Label(toplevel, text=URL,font=("Helvetica", 14),pady=5,fg="blue")
-		label1.pack()
-		label2.pack()
-		label3.pack()
-		button1				= tk.Button(toplevel, text='Dokumentáció',command=lambda: webbrowser.open(URL, new=0, autoraise=True))
-		button1.pack()
-	
+		return webbrowser_open(URL, new=0, autoraise=True)
+		
 	### MOUSE EVENTS
 	def cursor(self,type=""):
 		if not self.is_loading:
@@ -1137,22 +1146,32 @@ class Application(tk.Frame):
 		self.changes_draw = False
 	
 	def mouse_click_layers(self,event):
-		y					= max(-1,int((self.timeline_layers.canvasy(event.y-LAYOUT["DEFAULT"]["layer-offset"])/LAYOUT["DEFAULT"]["layer-height"])))
+		y					= max(-1,int((self.timeline_layers.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
 			y					= -1
 		if y>-1:
 			self.animation["properties"]["selected_layer"] = y
-			self.render(True)
+			self.render_layers(False)
+			self.render_frames(False)
+			if self.is_playing:
+				return
+			self.render_editor(True)
+			self.render_preview(True)
 		
 	def mouse_click_frames(self,event):
-		x					= max(0,int((self.timeline_frames.canvasx(event.x)/LAYOUT["DEFAULT"]["frame-width"])))
-		y					= max(-1,int((self.timeline_frames.canvasy(event.y-LAYOUT["DEFAULT"]["layer-offset"])/LAYOUT["DEFAULT"]["layer-height"])))
+		x					= max(0,int((self.timeline_frames.canvasx(event.x)/LAYOUT[self.skin]["frame-width"])))
+		y					= max(-1,int((self.timeline_frames.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
 			y					= -1
 		if y>-1:
 			self.animation["properties"]["selected_layer"] = y
+		if self.is_playing:
+			return
 		self.animation["properties"]["selected_frame"] = x
-		self.render(True)
+		self.render_layers(False)
+		self.render_frames(False)
+		self.render_editor(True)
+		self.render_preview(True)
 		
 	def mouse_popup_layers(self, event):
 		if self.is_playing:
@@ -1337,18 +1356,31 @@ class Application(tk.Frame):
 			frame, select = self.get_frame(layer)
 			for f in range(len(layer["frames"])-1,position-1):
 				layer["frames"].append({"type":"link","data":select})
-			layer["frames"].append({"type":"empty","data":{}})
+			#layer["frames"].append({"type":"empty","data":{}})
+			if frame:
+				layer["frames"].append({"type":"matrix","data":deepcopy(frame)})
+			else:	
+				layer["frames"].append({"type":"empty","data":{}})
 	
 	def insert_frame_extra(self,position,extra):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		if position<len(layer["frames"]):
 			self.extend_frame(position)
 			position+=1
-			self.insert_frame(position)
 		else:
-			self.insert_frame(position)
+			self.extend_frame(position)
 		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
-	
+
+	def overwrite_frame(self,position,extra):
+		if position:
+			self.insert_frame_extra(position,extra)
+			if position<=len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]):
+				self.remove_frame(position)
+				self.animation["properties"]["selected_frame"]+=1
+		else:
+			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
+				
+		
 	def remove_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		if position<len(layer["frames"]):
@@ -1369,12 +1401,19 @@ class Application(tk.Frame):
 					elif frame["data"]>position:
 						frame["data"]	-= 1
 				new_frames.append(frame)
-			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= new_frames
+			if not new_frames:
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= [{"type":"empty","data":{}}]
+			else:
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= new_frames
+			self.animation["properties"]["selected_frame"]	= max(0,self.animation["properties"]["selected_frame"]-1)
 	
 	def extend_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		frames	= layer["frames"]
 		if position>=len(frames):
+			frame,select	= self.get_frame(layer)
+			for f in range(len(frames)-1,position):
+				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"].append({"type":"link","data":select})
 			return
 		new_frames=frames[:position+1]
 		if frames[position]["type"]=="link":
@@ -1420,14 +1459,32 @@ class Application(tk.Frame):
 			select	= self.animation["properties"]["selected_frame"]
 			if layer["frames"][self.animation["properties"]["selected_frame"]]["type"]=="link":
 				select	= layer["frames"][self.animation["properties"]["selected_frame"]]["data"]
+				if layer["frames"][select]["type"]=="link":
+					return {},select	# error
 			return deepcopy(layer["frames"][select]["data"]), select
 		else:
 			# get the selected frame from the passed layer to view
 			select	= min(self.animation["properties"]["selected_frame"],len(view["frames"])-1)
 			if view["frames"][select]["type"]=="link":
 				select	= view["frames"][select]["data"]
+				if view["frames"][select]["type"]=="link":
+					return {},select	# error
 			return view["frames"][select]["data"], select
-		
+	
+	def get_next(self):
+		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
+		for select in range(self.animation["properties"]["selected_frame"]+1,len(layer["frames"])):
+			if layer["frames"][select]["type"]!="link":
+				return select
+		return len(layer["frames"])
+	
+	def get_prev(self):
+		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
+		select	= max(0,min(self.animation["properties"]["selected_frame"]-1,len(layer["frames"])-1))
+		if layer["frames"][select]["type"]=="link":
+			select	= layer["frames"][select]["data"]
+		return select
+	
 	def zoom(self,inc=True):
 		self.is_m1_down	= False
 		self.is_m3_down	= False
@@ -1480,10 +1537,6 @@ class Application(tk.Frame):
 		
 	def move(self,x_delta=0,y_delta=0):
 		frame, select= self.get_frame()
-		if not frame:
-			return
-		if not frame:
-			return
 		new_frame	= {}
 		for x in frame:
 			new_frame[(x+x_delta)]={}
@@ -1495,10 +1548,6 @@ class Application(tk.Frame):
 	
 	def flip(self,horizontal=True,render_flip=True):
 		frame, select= self.get_frame()
-		if not frame:
-			return
-		if not frame:
-			return
 		if horizontal:
 			x_offset	= int(self.animation["stage"]["width"])-1
 			x_delta		= -1
@@ -1521,10 +1570,6 @@ class Application(tk.Frame):
 	
 	def rotate(self,right=True):
 		frame, select= self.get_frame()
-		if not frame:
-			return
-		if not frame:
-			return
 		transpose	= {}	
 		for x in frame:
 			for y in frame[x]:
@@ -1727,12 +1772,12 @@ class Application(tk.Frame):
 		return deepcopy(frame)
 	
 	def button_tool(self,parameter):
-		if parameter in LAYOUT["DEFAULT"]["tools"]:
+		if parameter in LAYOUT[self.skin]["tools"]:
 			self.tool	= parameter
-			for button in LAYOUT["DEFAULT"]["tools"]:
-				self.stage_tools_buttons[button].configure(bg=LAYOUT["DEFAULT"]["button"])
+			for button in LAYOUT[self.skin]["tools"]:
+				self.stage_tools_buttons[button].configure(bg=LAYOUT[self.skin]["button"])
 				self.stage_tools_buttons[button].configure(image=self.images[button])
-			self.stage_tools_buttons[parameter].configure(bg=LAYOUT["DEFAULT"]["button-active"])
+			self.stage_tools_buttons[parameter].configure(bg=LAYOUT[self.skin]["button-active"])
 			if parameter+"-active" in self.images:
 				self.stage_tools_buttons[parameter].configure(image=self.images[parameter+"-active"])
 	
@@ -1796,13 +1841,25 @@ class Application(tk.Frame):
 			self.edit_menu.entryconfigure(5, state=tk.DISABLED)
 			self.edit_menu.entryconfigure(6, state=tk.DISABLED)
 	
-	def music():
-		mixer.init()
-		mixer.music.load("toto.mp3")
-		mixer.music.play()
-		mixer.music.rewind()
-		mixer.music.set_pos(10)
+	def music(self,play=True):
+		if self.audio is not None:
+			if play:
+				self.audio.play()	
+			else:
+				self.audio.stop()
 	
+	def music_load(self):
+		self.audio		= None	
+		if self.animation["properties"]["music"]:
+			if os.path.isfile(os.path.join(self.animation["properties"]["music"])):
+				self.audio		= vlc.MediaPlayer(self.animation["properties"]["music"])
+				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
+				self.properties_menu.entryconfigure(3, label="Zene: "+file)
+				return
+			else:
+				self.error("Nem található az MP3 fájl.","A megadott mp3 nem található:\n"+self.animation["properties"]["music"])
+		self.properties_menu.entryconfigure(3, label="Zene betöltése")
+		
 	def loading(self,update=True):
 		self.is_loading		= update
 		if self.is_loading:
@@ -1826,6 +1883,38 @@ class Application(tk.Frame):
 	def async_run(self,func):
 		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
 	
+	async def async_play(self):
+		timestamp	= time.time()
+		length		= self.animation_length()
+		speed		= self.animation["stage"]["speed"]/1000
+		start		= self.animation["properties"]["selected_frame"]
+		start_time	= start*speed
+		cnt			= 0
+		if self.audio:
+			await asyncio.sleep(min(500,speed*2))
+		while True:
+			if not self.is_playing:
+				self.animation["properties"]["selected_frame"]	= start
+				return
+			current		= time.time()
+			if timestamp<(current-speed):
+				timestamp	+= speed
+				self.animation["properties"]["selected_frame"]+=1
+				if self.animation["properties"]["selected_frame"]>=length:
+					self.animation["properties"]["selected_frame"]	= start
+					self.playback_pause()
+					return
+				#self.render_frames(False)
+				#self.render_editor(True,True)
+				#self.render_preview(bool(cnt%5==0),True)
+				cnt			+= 1
+				if self.audio is not None:
+					if self.audio.get_length():
+						position 	= self.audio.get_length()*self.audio.get_position()
+						if position<(self.animation["properties"]["selected_frame"]-3)*self.animation["stage"]["speed"] or position>(self.animation["properties"]["selected_frame"]+2)*self.animation["stage"]["speed"]:
+							percentage	= self.animation["properties"]["selected_frame"]*self.animation["stage"]["speed"]/self.audio.get_length()
+							self.audio.set_position(percentage)
+
 	async def async_render(self,event=None):
 		try:
 			await asyncio.sleep(.5)
@@ -1849,40 +1938,43 @@ class Application(tk.Frame):
 			output	= '-- __animeditor__\nmeta({\naudio='+audio+',\nteam='+team+',\ntitle='+title+',\nyear='+year+'})\n\nbeginclip(32,26,"main")\n'
 			length	= self.animation_length()
 			current	= self.animation["properties"]["selected_frame"]
-			for keyframe in range(length):
-				self.animation["properties"]["selected_frame"]	= keyframe
-				if keyframe%10==0:
-					percentage = int(keyframe/length*100)
-					# TODO: progressbar
-				frame_text	= 'frame({\n'
-				frame_cache	= {}
-				for layer in reversed(self.animation["timeline"]):
-					if layer["render"]:
-						frame,_ = self.get_frame(layer)
-						xframe	= deepcopy(frame)
-						for x in xframe:
-							for y in xframe[x]:
-								if x>=0 and x<width and y>=0 and y<height:
-									if x not in frame_cache:
-										frame_cache[x]	= {}
-									frame_cache[x][y]	= xframe[x][y]
-				for y in range(height):
-					for x in range(width):
-						if x in frame_cache and y in frame_cache[x]:
-							frame_text += frame_cache[x][y].upper().replace('#','0xFF')+','
-						else:
-							frame_text += default+','
-					frame_text	+= '\n'
-				frame_text+= '},'+speed+')\n'
-				output	+= frame_text
-			output	+= 'endclip()\n\nrootclip("main")\n'
-			self.animation["properties"]["selected_frame"] = current
 			try:
-				with codecs.open(file, "w", "utf-8-sig") as f:
-					f.write(output)
+				for keyframe in range(length):
+					self.animation["properties"]["selected_frame"]	= keyframe
+					if keyframe%10==0:
+						percentage = int(keyframe/length*100)
+						# TODO: progressbar
+					frame_text	= 'frame({\n'
+					frame_cache	= {}
+					for layer in reversed(self.animation["timeline"]):
+						if layer["render"]:
+							frame,_ = self.get_frame(layer)
+							xframe	= deepcopy(frame)
+							for x in xframe:
+								for y in xframe[x]:
+									if x>=0 and x<width and y>=0 and y<height:
+										if x not in frame_cache:
+											frame_cache[x]	= {}
+										frame_cache[x][y]	= xframe[x][y]
+					for y in range(height):
+						for x in range(width):
+							if x in frame_cache and y in frame_cache[x]:
+								frame_text += frame_cache[x][y].upper().replace('#','0xFF')+','
+							else:
+								frame_text += default+','
+						frame_text	+= '\n'
+					frame_text+= '},'+speed+')\n'
+					output	+= frame_text
+				output	+= 'endclip()\n\nrootclip("main")\n'
+				self.animation["properties"]["selected_frame"] = current
+				try:
+					with codecs.open(file, "w", "utf-8-sig") as f:
+						f.write(output)
+				except Exception as e:
+					return error("Nem sikerült menteni a fájlt!",e)
+				messagebox.showinfo("Exportálás sikeres" , "Az animáció konvertálása sikeres volt.")			
 			except Exception as e:
-				return error("Nem sikerült menteni a fájlt!",e)
-			messagebox.showinfo("Exportálás sikeres" , "Az animáció konvertálása sikeres volt.")			
+				return error("Hiba exportálás közben!",e)
 		self.loading(False)
 
 if __name__ == "__main__":

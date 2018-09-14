@@ -9,7 +9,10 @@ from webbrowser import open as webbrowser_open
 
 import asyncio
 import threading
-import vlc
+try:
+	import vlc
+except:
+	pass
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -1176,7 +1179,10 @@ class Application(tk.Frame):
 	### MOUSE EVENTS
 	def cursor(self,type=""):
 		if not self.is_loading:
-			self.root.config(cursor=type)
+			try:
+				self.root.config(cursor=type)
+			except:
+				pass
 		
 	def mouse_to_hand(self, event):
 		self.cursor("hand2")
@@ -1920,9 +1926,14 @@ class Application(tk.Frame):
 		self.audio		= None	
 		if self.animation["properties"]["music"]:
 			if os.path.isfile(os.path.join(self.animation["properties"]["music"])):
-				self.audio		= vlc.MediaPlayer(self.animation["properties"]["music"])
-				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
-				self.properties_menu.entryconfigure(3, label="Zene: "+file)
+				try:
+					self.audio		= vlc.MediaPlayer(self.animation["properties"]["music"])
+					file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
+					self.properties_menu.entryconfigure(3, label="Zene: "+file)
+				except:
+					self.error("VLC lejátszó hiba","Nem sikerült betölteni a hangfájlt, mert nem találhatók a VLC szükséges DLL fájljai.")
+					file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
+					self.properties_menu.entryconfigure(3, label="Zene nem található: "+file)
 			else:
 				self.error("Nem található az MP3 fájl.","A megadott mp3 nem található:\n"+self.animation["properties"]["music"])
 				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
@@ -1933,7 +1944,10 @@ class Application(tk.Frame):
 	def loading(self,update=True):
 		self.is_loading		= update
 		if self.is_loading:
-			self.root.config(cursor="wait")
+			try:
+				self.root.config(cursor="wait")
+			except:
+				pass
 		else:
 			self.root.config(cursor="")
 			

@@ -18,7 +18,7 @@ Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-
 Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzióját és futtasd a forráskódot (ez Windows mellett MacOs X és Linux alatt is elérhető). A python kód futtatásához még a [VLC letöltésére](https://www.videolan.org/vlc/index.html) és az alábbi csomagok telepítésére van szükség (Windows alatt írd be ezeket a parancssorba. MacOs X és Linux alatt lehet, hogy elé kell írnod, hogy "sudo"):
 
 ```python
-> pip3 install asynchio
+> pip3 install asyncio
 > pip3 install tkinter
 > pip3 install python-vlc
 ```

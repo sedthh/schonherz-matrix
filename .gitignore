@@ -1,3 +1,11 @@
+dist/
+build/
+plugins/
+*.spec
+*.mp3
+*.psd
+*.qp4
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

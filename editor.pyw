@@ -93,6 +93,11 @@ LAYOUT		= {
 		"palette-active-width"	: 40,
 		"palette-active-height"	: 20,
 		"images"			: {
+			"icon"			: {
+				"src"					: "icon.png",
+				"width"					: 64,
+				"height"				: 64
+			},
 			"pencil"			: {
 				"src"					: "pencil.png",
 				"width"					: 20,
@@ -233,18 +238,22 @@ class Application(tk.Frame):
 		# images
 		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])	
 		self.images			= {}
+		notfound			= []
 		for img in self.animation["stage"]["images"]:
 			try:
 				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",self.animation["stage"]["images"][img]["src"]),width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
 			except:
-				self.error("A keresett fájl nem található!","Nem található a(z) "+self.animation["stage"]["images"][img]["src"]+" képfájl.")
+				notfound.append(self.animation["stage"]["images"][img]["src"])
 				self.images[img]	= tk.PhotoImage(width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
+		
 		for img in LAYOUT[self.skin]["images"]:
 			try:
 				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT[self.skin]["images"][img]["src"]),width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
 			except:
-				self.error("A keresett fájl nem található!","Nem található a(z) "+LAYOUT[self.skin]["images"][img]["src"]+" képfájl.")
+				notfound.append(self.animation["stage"]["images"][img]["src"])
 				self.images[img]	= tk.PhotoImage(width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
+		if notfound:
+			self.error("A keresett fájl nem található!","Nem található(k): "+",".join(notfouund))
 		
 		# generate editor window
 		self.root.minsize(self.width,self.height)
@@ -261,6 +270,7 @@ class Application(tk.Frame):
 		self.render(True)
 		self.root.bind("<Configure>", self.on_resize)
 		self.root.bind("<FocusIn>", self.on_focus)
+		self.root.call('wm', 'iconphoto', self.root._w, self.images["icon"]) 
 		self.on_focus()
 		self.music_load()
 	
@@ -1904,9 +1914,9 @@ class Application(tk.Frame):
 					self.animation["properties"]["selected_frame"]	= start
 					self.playback_pause()
 					return
-				#self.render_frames(False)
+				self.render_frames(False)
 				#self.render_editor(True,True)
-				#self.render_preview(bool(cnt%5==0),True)
+				self.render_preview(bool(cnt%5==0),True)
 				cnt			+= 1
 				if self.audio is not None:
 					if self.audio.get_length():

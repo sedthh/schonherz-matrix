@@ -24,10 +24,11 @@ Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzió
 
 Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban. A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.
 
+A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
+
 ```python
 > python editor.pyw
 ```
-A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
 
 *Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 

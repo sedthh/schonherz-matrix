@@ -247,7 +247,7 @@ class Application(tk.Frame):
 		self.block_hotkeys	= False
 
 		# images
-		self.path			= "\\".join(os.path.realpath(__file__).split("\\")[:-1])	
+		self.path			= os.path.dirname(os.path.realpath(__file__))	
 		self.images			= {}
 		notfound			= []
 		for img in self.animation["stage"]["images"]:

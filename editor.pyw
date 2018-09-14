@@ -1158,7 +1158,7 @@ class Application(tk.Frame):
 		if self.block_hotkeys:
 			return
 		self.playback_pause()
-		self.animation["properties"]["selected_frame"]	= max(0,animation_length()-1)
+		self.animation["properties"]["selected_frame"]	= max(0,self.animation_length()-1)
 		self.render(True)
 		
 	def playback_back(self,event=None):

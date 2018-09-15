@@ -26,7 +26,7 @@ from tkinter.colorchooser import askcolor
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.0 alfa"					# version number
+VERSION		= "0.1.1 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
@@ -857,10 +857,11 @@ class Application(tk.Frame):
 						if color!='0':
 							x		= i%self.animation["stage"]["width"]
 							y		= int(i/self.animation["stage"]["width"])
-							newcolor= "#"+color[-6:]
 							if x not in newframe:
 								newframe[x]	= {}
-							newframe[x][y]= newcolor
+							newcolor= "#"+color[-6:]
+							if len(newcolor)==7:
+								newframe[x][y]= newcolor
 					if newframe:
 						self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"matrix","data":deepcopy(newframe)})
 					else:
@@ -870,6 +871,7 @@ class Application(tk.Frame):
 						if i:
 							self.extend_frame(self.animation["properties"]["selected_frame"]+step)
 							step	+= 1							
+				self.edit_history_add("képkockák importálása")
 				self.render(True)	
 			else:
 				self.error("Ismeretlen fájl formátum!","A fájl nem tartalmaz képkockákat.")
@@ -1475,17 +1477,16 @@ class Application(tk.Frame):
 	
 	def insert_frame_extra(self,position,extra):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
+		self.extend_frame(position)
 		if position<len(layer["frames"]):
-			self.extend_frame(position)
 			position+=1
-		else:
-			self.extend_frame(position)
+		self.insert_frame(position)
 		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
 
 	def overwrite_frame(self,position,extra):
 		if position:
 			self.insert_frame_extra(position,extra)
-			if position<=len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]):
+			if position<len(self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]):
 				self.remove_frame(position)
 				self.animation["properties"]["selected_frame"]+=1
 		else:

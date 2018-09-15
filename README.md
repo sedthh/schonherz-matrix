@@ -8,6 +8,7 @@ A **QPY** egy LED fal animáció szerkesztő alkalmazás, amely a [Schönherz QP
 1. [Installálás](#installálás)
 2. [Szerkesztés](#szerkesztés)
 3. [Exportálás](#exportálás)
+4. [FAQ](#faq)
 	
 ## Installálás
 
@@ -22,7 +23,7 @@ Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzió
 > pip3 install python-vlc
 ```
 
-Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban. A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.
+Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban. 
 
 A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
 
@@ -55,13 +56,21 @@ A kijelölés, kivágás, másolás és beillesztés csak képkockákra és a te
 
 Mozgatni rajzot a nyilakkal és a transzformációs menü mozgatási parancsaival lehet. A transzformációk között elérhető tükrözés és forgatás is. A szerkesztés megkönnyítésére a legtöbb funkcióhoz elérhetők **billentyűparancsok** is (emellett a számokkal eszköztár elemeket, az egér görgővel színeket lehet választani a színpadon). 
 
-Lejátszás alatt csak az előnézeti ablak frissül, ezzel minimalizálva a kirajzolás okozta laget.
-
 **PROTIP:** *Ha esetleg idén is tetriszt, snake-et, pohárból elfogyó sört vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.*
-
-A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *AniimEditor2012* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 
 ## Exportálás
 A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt. Az exportálás után létrejövő fájl már megnyitható az eddig használt *AnimEditor2012* szerkesztőben is. 
 
 **Animáció feltöltéskor ne felejtsétek el mellékelni az MP3 fájlt is!**
+
+## FAQ
+
+- A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *AniimEditor2012* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
+
+- A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
+
+- Lejátszás alatt csak az előnézeti ablak frissül, ezzel minimalizálva a kirajzolás okozta laget.
+
+- Kirajzoláskor mindig időben a legutolsó képkocka fog látszódni, egészen addig, amíg nem jön időben egy újabb képkocka.
+
+- A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.

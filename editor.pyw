@@ -4,6 +4,7 @@ import os
 import json
 import time
 import codecs
+import re
 from copy import deepcopy
 from webbrowser import open as webbrowser_open
 
@@ -330,7 +331,7 @@ class Application(tk.Frame):
 		self.file_menu.add_command(label = "Mentés másként", command = self.file_save_as, underline=1,accelerator="Ctrl+Shift+S")
 		self.root.bind_all("<Control-S>", self.file_save_as)
 		self.file_menu.add_separator()
-		self.file_menu.add_command(label = "Importálás", command = self.file_import, underline=1,accelerator="Ctrl+I", state=tk.DISABLED)
+		self.file_menu.add_command(label = "Importálás", command = self.file_import, underline=1,accelerator="Ctrl+I")
 		self.root.bind_all("<Control-i>", self.file_import)
 		self.file_menu.add_command(label = "Exportálás", command = self.file_export, underline=1,accelerator="Ctrl+Enter")
 		self.root.bind_all("<Control-Return>", self.file_export)
@@ -504,6 +505,8 @@ class Application(tk.Frame):
 		self.stage_editor.bind("<MouseWheel>", self.mouse_wheel_stage)
 		self.stage_preview.bind("<MouseWheel>", self.mouse_wheel_stage)
 		
+		for i,tool in enumerate(LAYOUT[self.skin]["tools"]):
+			self.root.bind_all("<Key-"+str(i+1)+">", lambda event,workaround=tool:self.button_tool(workaround) if not self.block_hotkeys else None)
 		self.button_tool(LAYOUT[self.skin]["tools"][0])
 	
 	### RENDER ELEMENTS
@@ -828,12 +831,49 @@ class Application(tk.Frame):
 			return
 		self.playback_pause()
 		self.root.update()
-		file				= asksaveasfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),))
+		file				= asksaveasfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),),title = "Exportálás")
 		if file:
 			self.async_run(self.async_export(file))
 			
 	def file_import(self,event=None):
-		self.log("Import disabled")
+		self.root.update()
+		file				= askopenfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),),title = "Importálás")
+		if file:
+			self.loading(True)
+			with codecs.open(file,"r",encoding="utf-8") as f:
+				data				= f.read()
+			pattern = re.compile(r'frame\(\{[\r\n]*([0123456789abcdefx\,\r\n\s]+)[\r\n]*\}\s?\,\s?(\d+)\)', flags=re.IGNORECASE)
+			c_pattern=re.compile(r'([0123456789abcdefx]+)[\r\n\s\,]*', flags=re.IGNORECASE)
+			frames	= re.findall(pattern,data)
+			if frames:
+				step	= 0
+				for info in frames:
+					length	= max(1,int(int(info[1])/self.animation["stage"]["speed"]))
+					colors	= re.findall(c_pattern,info[0])
+					newframe= {}
+					x		= 0
+					y		= 0
+					for i,color in enumerate(colors):
+						if color!='0':
+							x		= i%self.animation["stage"]["width"]
+							y		= int(i/self.animation["stage"]["width"])
+							newcolor= "#"+color[-6:]
+							if x not in newframe:
+								newframe[x]	= {}
+							newframe[x][y]= newcolor
+					if newframe:
+						self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"matrix","data":deepcopy(newframe)})
+					else:
+						self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"empty","data":{}})
+					step	+= 1
+					for i in range(length):
+						if i:
+							self.extend_frame(self.animation["properties"]["selected_frame"]+step)
+							step	+= 1							
+				self.render(True)	
+			else:
+				self.error("Ismeretlen fájl formátum!","A fájl nem tartalmaz képkockákat.")
+			self.loading(False)
 	
 	def file_quit(self,event=None):
 		if self.changes_made:

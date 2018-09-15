@@ -59,13 +59,13 @@ Mozgatni rajzot a nyilakkal és a transzformációs menü mozgatási parancsaiva
 **PROTIP:** *Ha esetleg idén is tetriszt, snake-et, pohárból elfogyó sört vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.*
 
 ## Exportálás
-A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt. Az exportálás után létrejövő fájl már megnyitható az eddig használt *AnimEditor2012* szerkesztőben is. 
+A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt. Az exportálás után létrejövő fájl már megnyitható az eddig használt *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztőben is. 
 
 **Animáció feltöltéskor ne felejtsétek el mellékelni az MP3 fájlt is!**
 
 ## FAQ
 
-- A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *AniimEditor2012* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
+- A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket egy \*.qp4 LUA kóddá az *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztőhöz. Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
 
 - A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 

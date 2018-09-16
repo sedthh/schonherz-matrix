@@ -13,6 +13,7 @@ import threading
 try:
 	import vlc
 except:
+	# crashes with random errors if certain dll files are missing, and did not have the time to debug it
 	pass
 
 import tkinter as tk
@@ -1988,6 +1989,7 @@ class Application(tk.Frame):
 		if not self.progress_window:
 			self.progress_window= tk.Toplevel(self.root)
 			self.progress_window.wm_title("Kis türelmet...")
+			self.root.call('wm', 'iconphoto', self.progress_window._w, self.images["icon"]) 
 			self.progress_bar= Progressbar(self.progress_window, orient="horizontal",length=300, mode="determinate")
 			self.progress_bar["value"] = 0
 			self.progress_bar["maximum"]= 100

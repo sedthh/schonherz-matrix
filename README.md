@@ -78,3 +78,5 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 - Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
 
 - A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.
+
+- A forráskódon szépíteni fogunk, egyelőre az volt a cél, hogy be legyen időre fejezve és fusson.

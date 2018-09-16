@@ -407,6 +407,7 @@ class Application(tk.Frame):
 		self.root.bind_all("<Prior>", self.playback_next)
 
 		self.help_menu		= tk.Menu(self.menubar, tearoff=0)
+		self.help_menu.add_command(label = "Hiba bejelentés", command = self.other_send_issue,underline=1)
 		self.help_menu.add_command(label = "Névjegy", command = self.other_about,underline=1,accelerator="F1")
 		self.root.bind_all("<F1>", self.other_about)
 		
@@ -1198,7 +1199,10 @@ class Application(tk.Frame):
 	
 	def other_about(self,event=None):
 		return webbrowser_open(URL, new=0, autoraise=True)
-		
+
+	def other_send_issue(self,event=None):
+		return webbrowser_open(f'{URL}/issues/new?body=Verzió:%20{VERSION}%0A%0AHiba%20leírása:', new=0, autoraise=True)
+
 	### MOUSE EVENTS
 	def cursor(self,type=""):
 		if not self.is_loading:

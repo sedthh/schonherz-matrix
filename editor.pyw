@@ -27,7 +27,7 @@ from tkinter.ttk import Progressbar
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.1 alfa"					# version number
+VERSION		= "0.1.2 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
@@ -407,7 +407,7 @@ class Application(tk.Frame):
 		self.root.bind_all("<Prior>", self.playback_next)
 
 		self.help_menu		= tk.Menu(self.menubar, tearoff=0)
-		self.help_menu.add_command(label = "Hiba bejelentés", command = self.other_send_issue,underline=1)
+		self.help_menu.add_command(label = "Hiba bejelentés", command = self.other_issue,underline=1)
 		self.help_menu.add_command(label = "Névjegy", command = self.other_about,underline=1,accelerator="F1")
 		self.root.bind_all("<F1>", self.other_about)
 		
@@ -1200,7 +1200,7 @@ class Application(tk.Frame):
 	def other_about(self,event=None):
 		return webbrowser_open(URL, new=0, autoraise=True)
 
-	def other_send_issue(self,event=None):
+	def other_issue(self,event=None):
 		return webbrowser_open(f'{URL}/issues/new?body=Verzió:%20{VERSION}%0A%0AHiba%20leírása:', new=0, autoraise=True)
 
 	### MOUSE EVENTS

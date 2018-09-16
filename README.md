@@ -67,7 +67,7 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 
 - A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás (~1000 képkocka fölött) és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket. A kiexportált animációk újra ugyanúgy beimportálhatóak. 
 
-- anuálisan összevágni a kiexportált részeket LUA kódként a régi *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztővel is lehet. 
+- Manuálisan összevágni a kiexportált részeket LUA kódként a régi *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztővel is lehet. Szóval ha valami nagyon nem megy, még mindig tudjátok a régi szerkesztőt használni.
 
 - A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 

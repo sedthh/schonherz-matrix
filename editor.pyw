@@ -20,6 +20,7 @@ from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import asksaveasfilename
 from tkinter import messagebox
 from tkinter.colorchooser import askcolor
+from tkinter.ttk import Progressbar
 
 ### GLOBALS
 
@@ -66,7 +67,7 @@ PROFILES	= {
 }
 LAYOUT		= {
 	"DEFAULT"	: { # default color scheme
-		"history_size"		: 5,
+		"history_size"		: 7,
 		"root"				: "#eeeeee",
 		"stage"				: "#bbbbbb",
 		"toolbar"			: "#dddddd",
@@ -228,6 +229,7 @@ class Application(tk.Frame):
 		self.is_loading		= False
 		self.is_m1_down		= False
 		self.is_m3_down		= False
+		self.resize			= False
 		self.file			= ""
 		self.tool			= ""
 		self.color			= 0
@@ -246,6 +248,8 @@ class Application(tk.Frame):
 		self.history_events	= 0
 		self.audio			= None
 		self.block_hotkeys	= False
+		self.progress_window= False
+		self.progress_bar	= False
 
 		# images
 		self.path			= os.path.dirname(os.path.realpath(__file__))	
@@ -474,7 +478,8 @@ class Application(tk.Frame):
 			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
 			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
-		
+			self.stage_colorpicker_buttons[-1].bind("<Button-3>",lambda event, workaround=i:[self.button_colorpicker(workaround),self.button_colorpicker(-1)])
+			
 		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=300, height=LAYOUT[self.skin]["toolbar-height"])
 		self.stage_playback.grid(row=3,column=3)
 		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["rewind"],bg=LAYOUT[self.skin]["button"],command=self.playback_rewind)
@@ -541,28 +546,37 @@ class Application(tk.Frame):
 				last		= ""
 				color		= ""
 				stipple		= ""
+				cache_frame	= 0
 				for i in range(max(max_width,max_frames*width)+1):
 					if i<len(self.animation["timeline"][j]["frames"]):
 						if self.animation["timeline"][j]["frames"][i]["type"]=="empty":
+							if cache_frame:
+								self.timeline_frames.create_rectangle((i-cache_frame)*width+1, offset+j*height+1, i*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-empty"]
-							stipple		= ""
+							stipple	= ""
 							outline	= LAYOUT[self.skin]["frame-border"]
 						elif self.animation["timeline"][j]["frames"][i]["type"]=="matrix":
+							if cache_frame:
+								self.timeline_frames.create_rectangle((i-cache_frame)*width+1, offset+j*height+1, i*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-matrix"]
-							stipple		= ""
+							stipple	= ""
 							outline	= LAYOUT[self.skin]["frame-border"]
 						else:
 							color	= last
 							stipple	= "gray50"
-							outline	= LAYOUT[self.skin]["frame-color"]	
+							outline	= LAYOUT[self.skin]["frame-color"]
+							cache_frame+=1
+						last		= color
+						if not cache_frame:
+							self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline=color)
 					else:
-						color		= ""
+						#color	= ""
 						stipple	= "gray50"
 						if i==len(self.animation["timeline"][j]["frames"]):
 							self.timeline_frames.create_line(i*width+1, offset+j*height+1, i*width+1, offset+(j+1)*height, fill=outline)
 						outline	= LAYOUT[self.skin]["frame-color"]	
-					last		= color
-					self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
 						if i%10==0:
@@ -572,6 +586,9 @@ class Application(tk.Frame):
 							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 						else:
 							self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+				if cache_frame:
+					self.timeline_frames.create_rectangle((len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1, offset+j*height+1, len(self.animation["timeline"][j]["frames"])*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+					cache_frame=0				
 			self.timeline_frames.create_line(0, offset, (max(max_width,max_frames*width)+1)*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 		try:
 			self.timeline_frames.delete(self.timeline_frames_select)
@@ -839,43 +856,7 @@ class Application(tk.Frame):
 		self.root.update()
 		file				= askopenfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),),title = "Importálás")
 		if file:
-			self.loading(True)
-			with codecs.open(file,"r",encoding="utf-8") as f:
-				data				= f.read()
-			pattern = re.compile(r'frame\(\{[\r\n]*([0123456789abcdefx\,\r\n\s]+)[\r\n]*\}\s?\,\s?(\d+)\)', flags=re.IGNORECASE)
-			c_pattern=re.compile(r'([0123456789abcdefx]+)[\r\n\s\,]*', flags=re.IGNORECASE)
-			frames	= re.findall(pattern,data)
-			if frames:
-				step	= 0
-				for info in frames:
-					length	= max(1,int(int(info[1])/self.animation["stage"]["speed"]))
-					colors	= re.findall(c_pattern,info[0])
-					newframe= {}
-					x		= 0
-					y		= 0
-					for i,color in enumerate(colors):
-						if color!='0':
-							x		= i%self.animation["stage"]["width"]
-							y		= int(i/self.animation["stage"]["width"])
-							if x not in newframe:
-								newframe[x]	= {}
-							newcolor= "#"+color[-6:]
-							if len(newcolor)==7:
-								newframe[x][y]= newcolor
-					if newframe:
-						self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"matrix","data":deepcopy(newframe)})
-					else:
-						self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"empty","data":{}})
-					step	+= 1
-					for i in range(length):
-						if i:
-							self.extend_frame(self.animation["properties"]["selected_frame"]+step)
-							step	+= 1							
-				self.edit_history_add("képkockák importálása")
-				self.render(True)	
-			else:
-				self.error("Ismeretlen fájl formátum!","A fájl nem tartalmaz képkockákat.")
-			self.loading(False)
+			self.async_run(self.async_import(file))
 	
 	def file_quit(self,event=None):
 		if self.changes_made:
@@ -1228,7 +1209,7 @@ class Application(tk.Frame):
 		
 	def mouse_to_hand(self, event):
 		self.cursor("hand2")
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if (self.is_m1_down or self.is_m3_down) and self.start_x is not None and self.start_y is not None:
 			if self.tool in ("line","rectangle"):
@@ -1239,7 +1220,7 @@ class Application(tk.Frame):
 	
 	def mouse_to_default(self, event):
 		self.cursor("")
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if (self.is_m1_down or self.is_m3_down) and self.start_x is not None and self.start_y is not None:
 			if self.tool=="line":
@@ -1259,6 +1240,8 @@ class Application(tk.Frame):
 		self.changes_draw = False
 	
 	def mouse_click_layers(self,event):
+		if self.is_loading:
+			return
 		y					= max(-1,int((self.timeline_layers.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
 			y					= -1
@@ -1272,6 +1255,8 @@ class Application(tk.Frame):
 			self.render_preview(True)
 		
 	def mouse_click_frames(self,event):
+		if self.is_loading:
+			return
 		x					= max(0,int((self.timeline_frames.canvasx(event.x)/LAYOUT[self.skin]["frame-width"])))
 		y					= max(-1,int((self.timeline_frames.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
@@ -1287,7 +1272,7 @@ class Application(tk.Frame):
 		self.render_preview(True)
 		
 	def mouse_popup_layers(self, event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.mouse_click_layers(event)
 		try:
@@ -1296,7 +1281,7 @@ class Application(tk.Frame):
 			self.playback_menu.grab_release()
 	
 	def mouse_popup_frames(self, event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.mouse_click_frames(event)
 		try:
@@ -1312,7 +1297,7 @@ class Application(tk.Frame):
 			self.timeline_frames.xview_moveto(0)
 	
 	def mouse_click_stage(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.is_m1_down	= True
 		self.start_x	= None
@@ -1320,7 +1305,7 @@ class Application(tk.Frame):
 		self.mouse_move_stage(event)
 	
 	def mouse_popup_stage(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.is_m3_down	= True
 		self.start_x	= None
@@ -1328,7 +1313,7 @@ class Application(tk.Frame):
 		self.mouse_move_stage(event)
 	
 	def mouse_release_stage(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if self.tool=="line":
 			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
@@ -1345,7 +1330,7 @@ class Application(tk.Frame):
 		self.changes_draw = False
 	
 	def mouse_move_stage(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if self.is_m1_down or self.is_m3_down:
 			size	= max(1,self.animation["properties"]["zoom"])
@@ -1377,7 +1362,7 @@ class Application(tk.Frame):
 				self.zoom(self.is_m1_down)
 	
 	def mouse_click_preview(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.is_m1_down	= True
 		self.start_x	= None
@@ -1385,7 +1370,7 @@ class Application(tk.Frame):
 		self.mouse_move_preview(event)
 	
 	def mouse_popup_preview(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		self.is_m3_down	= True
 		self.start_x	= None
@@ -1393,7 +1378,7 @@ class Application(tk.Frame):
 		self.mouse_move_preview(event)
 	
 	def mouse_release_preview(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if self.tool=="line":
 			self.line(self.end_x,self.end_y,self.is_m1_down,False,False)
@@ -1410,7 +1395,7 @@ class Application(tk.Frame):
 		self.changes_draw = False
 		
 	def mouse_move_preview(self,event):
-		if self.is_playing:
+		if self.is_playing or self.is_loading:
 			return
 		if self.is_m1_down or self.is_m3_down:
 			width	= self.stage_preview.winfo_width()
@@ -1932,17 +1917,18 @@ class Application(tk.Frame):
 			if self.width!=self.root.winfo_width() or self.height!=self.root.winfo_height():
 				update		= True
 			if self.state!=self.root.wm_state():
-				update		= True
-				self.async_run(self.async_render())
+				update		= False	
+				self.state	= self.root.wm_state()
+				if not self.resize:
+					self.resize	= True
+					self.async_run(self.async_render())
 			if update:
-				self.stage_editor.update()
-				self.stage_preview.update()
-				self.stage.update()
-				self.root.update()
 				self.width	= self.root.winfo_width()
 				self.height	= self.root.winfo_height()		
 				self.state	= self.root.wm_state()
-				self.render(True)
+				if not self.resize:
+					self.resize	= True
+					self.async_run(self.async_render())
 		except:
 			pass
 	
@@ -1981,17 +1967,34 @@ class Application(tk.Frame):
 				self.properties_menu.entryconfigure(3, label="Zene nem található: "+file)
 		else:
 			self.properties_menu.entryconfigure(3, label="Zene betöltése")
-		
+	
 	def loading(self,update=True):
 		self.is_loading		= update
 		if self.is_loading:
 			try:
 				self.root.config(cursor="wait")
+				self.root.update()
 			except:
 				pass
 		else:
 			self.root.config(cursor="")
-			
+			self.root.update()
+	
+	def loading_progress(self,percentage=0):
+		if not self.progress_window:
+			self.progress_window= tk.Toplevel(self.root)
+			self.progress_window.wm_title("Kis türelmet...")
+			self.progress_bar= Progressbar(self.progress_window, orient="horizontal",length=300, mode="determinate")
+			self.progress_bar["value"] = 0
+			self.progress_bar["maximum"]= 100
+			self.progress_bar.pack()
+		if percentage>=100:
+			self.progress_window.destroy()
+			self.progress_window	= None
+		else:
+			self.progress_bar["value"] = min(99,max(0,percentage))
+			#self.properties_window.protocol("WM_DELETE_WINDOW", lambda event:pass)
+	
 	def error(self,message="Ismeretlen hiba",e=None):					
 		self.loading(False)
 		messagebox.showerror(message, str(e))
@@ -2006,7 +2009,10 @@ class Application(tk.Frame):
 		print(time.strftime("%H:%M:%S")+" > "+message,flush=True)
 	
 	def async_run(self,func):
-		threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
+		try:
+			threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
+		except RuntimeError as e:
+			pass
 	
 	def async_play(self):
 		timestamp	= time.time()
@@ -2056,7 +2062,49 @@ class Application(tk.Frame):
 			self.render(True)
 		except:
 			pass
-			
+		self.resize	= False
+	
+	async def async_import(self,file):
+		self.loading(True)
+		with codecs.open(file,"r",encoding="utf-8") as f:
+			data				= f.read()
+		pattern = re.compile(r'frame\(\{[\r\n]*([0123456789abcdefx\,\r\n\s]+)[\r\n]*\}\s?\,\s?(\d+)\)', flags=re.IGNORECASE)
+		c_pattern=re.compile(r'([0123456789abcdefx]+)[\r\n\s\,]*', flags=re.IGNORECASE)
+		frames	= re.findall(pattern,data)
+		if frames:
+			step	= 0
+			for at,info in enumerate(frames):
+				self.loading_progress(int(at/len(frames)*100)-1)
+				length	= max(1,int(int(info[1])/self.animation["stage"]["speed"]))
+				colors	= re.findall(c_pattern,info[0])
+				newframe= {}
+				x		= 0
+				y		= 0
+				for i,color in enumerate(colors):
+					if color!='0':
+						x		= i%self.animation["stage"]["width"]
+						y		= int(i/self.animation["stage"]["width"])
+						if x not in newframe:
+							newframe[x]	= {}
+						newcolor= "#"+color[-6:]
+						if len(newcolor)==7:
+							newframe[x][y]= newcolor
+				if newframe:
+					self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"matrix","data":deepcopy(newframe)})
+				else:
+					self.insert_frame_extra(self.animation["properties"]["selected_frame"]+step,{"type":"empty","data":{}})
+				step	+= 1
+				for i in range(length):
+					if i:
+						self.extend_frame(self.animation["properties"]["selected_frame"]+step)
+						step	+= 1							
+			self.edit_history_add("képkockák importálása")
+			self.render(True)	
+		else:
+			self.error("Ismeretlen fájl formátum!","A fájl nem tartalmaz képkockákat.")
+		self.loading_progress(100)
+		self.loading(False)
+	
 	async def async_export(self,file):
 		if self.is_loading:
 			return
@@ -2077,8 +2125,8 @@ class Application(tk.Frame):
 				for keyframe in range(length):
 					self.animation["properties"]["selected_frame"]	= keyframe
 					if keyframe%10==0:
-						percentage = int(keyframe/length*100)
-						# TODO: progressbar
+						percentage = int(keyframe/length*100)-1
+						self.loading_progress(percentage)
 					frame_text	= 'frame({\n'
 					frame_cache	= {}
 					for layer in reversed(self.animation["timeline"]):
@@ -2110,6 +2158,7 @@ class Application(tk.Frame):
 				messagebox.showinfo("Exportálás sikeres" , "Az animáció konvertálása sikeres volt.")			
 			except Exception as e:
 				return self.error("Hiba exportálás közben!",e)
+		self.loading_progress(100)
 		self.loading(False)
 
 if __name__ == "__main__":

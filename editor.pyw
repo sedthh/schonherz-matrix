@@ -432,7 +432,7 @@ class Application(tk.Frame):
 		self.timeline_pos.grid(row=1,column=0,sticky="en")
 		self.timeline_frames= tk.Canvas(self.timeline,height=height)
 		self.timeline_frames.grid(row=0,column=1,sticky="wen")
-		self.timeline_scrollbar_h= tk.Scrollbar(self.timeline,orient='horizontal',command=self.timeline_frames.xview)
+		self.timeline_scrollbar_h= tk.Scrollbar(self.timeline,orient='horizontal',command=lambda a,b,c=None:[self.timeline_frames.xview(a,b,c),self.render_frames(True)])
 		self.timeline_scrollbar_h.grid(row=1,column=1,sticky="wen")
 		self.timeline_frames.config(xscrollcommand = self.timeline_scrollbar_h.set)
 		self.timeline.pack(fill=tk.X)
@@ -544,6 +544,8 @@ class Application(tk.Frame):
 		max_frames		= self.animation_length() + 50 # extra 5 seconds visible in editor
 		max_height		= (len(self.animation["timeline"])+1)*height
 		max_width		= max(60,int(self.timeline_frames.winfo_width()/width)+1)
+		visible_min 	= self.timeline_frames.canvasx(0)
+		visible_max 	= self.timeline_frames.canvasx(self.timeline_frames.winfo_width())
 		if redraw:
 			self.timeline_frames.delete("all")
 			for j in range(len(self.animation["timeline"])):
@@ -555,14 +557,16 @@ class Application(tk.Frame):
 					if i<len(self.animation["timeline"][j]["frames"]):
 						if self.animation["timeline"][j]["frames"][i]["type"]=="empty":
 							if cache_frame:
-								self.timeline_frames.create_rectangle((i-cache_frame)*width+1, offset+j*height+1, i*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+								if i*width>visible_min:
+									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-empty"]
 							stipple	= ""
 							outline	= LAYOUT[self.skin]["frame-border"]
 						elif self.animation["timeline"][j]["frames"][i]["type"]=="matrix":
-							if cache_frame:
-								self.timeline_frames.create_rectangle((i-cache_frame)*width+1, offset+j*height+1, i*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+							if cache_frame:	
+								if i*width>visible_min:
+									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-matrix"]
 							stipple	= ""
@@ -574,7 +578,8 @@ class Application(tk.Frame):
 							cache_frame+=1
 						last		= color
 						if not cache_frame:
-							self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline=color)
+							if i*width>visible_min and i*width<visible_max:	
+								self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline=color)
 					else:
 						#color	= ""
 						stipple	= "gray50"
@@ -583,17 +588,19 @@ class Application(tk.Frame):
 						outline	= LAYOUT[self.skin]["frame-color"]	
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
-						if i%10==0:
-							self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
-							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
-						elif i%5==0:
-							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
-						else:
-							self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+						if i*width>visible_min and i*width<visible_max:
+							if i%10==0:
+								self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
+								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+							elif i%5==0:
+								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+							else:
+								self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 				if cache_frame:
-					self.timeline_frames.create_rectangle((len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1, offset+j*height+1, len(self.animation["timeline"][j]["frames"])*width, offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+					if len(self.animation["timeline"][j]["frames"])*width>visible_min:
+						self.timeline_frames.create_rectangle(max(visible_min,(len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1), offset+j*height+1, min(visible_max,len(self.animation["timeline"][j]["frames"])*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 					cache_frame=0				
-			self.timeline_frames.create_line(0, offset, (max(max_width,max_frames*width)+1)*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+			self.timeline_frames.create_line(max(visible_min,0), offset, min(visible_max,(max(max_width,max_frames*width)+1)*width+1), offset, fill=LAYOUT[self.skin]["layer-color"])
 		try:
 			self.timeline_frames.delete(self.timeline_frames_select)
 			self.timeline_frames.delete(self.timeline_frames_select_line)
@@ -623,7 +630,9 @@ class Application(tk.Frame):
 				else:
 					for x in range(p_width):
 						for y in range(p_height):
-							self.stage_editor.create_rectangle(left+size*x, top+size*y, left+size*(x+1), top+size*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+							self.stage_editor.create_rectangle(left+size*x, top+size*y, left+size*(x+1), top+size*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])
+				self.stage_editor.create_line(left+int(p_width*size/2),top,left+int(p_width*size/2),top+p_height*size,fill=self.animation["stage"]["border-color"],width=2)
+				self.stage_editor.create_line(left,top+int(p_height*size/2),left+p_width*size,top+int(p_height*size/2),fill=self.animation["stage"]["border-color"],width=2)
 						
 			min_x, min_y, max_x, max_y 	= 0, 0, p_width, p_height
 			self.render_cache			= {}
@@ -1311,6 +1320,7 @@ class Application(tk.Frame):
 			self.timeline_frames.xview_scroll(value, "units")
 		else:
 			self.timeline_frames.xview_moveto(0)
+		self.render_frames(True)
 	
 	def mouse_click_stage(self,event):
 		if self.is_playing or self.is_loading:

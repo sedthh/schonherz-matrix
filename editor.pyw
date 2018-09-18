@@ -28,7 +28,7 @@ from tkinter.ttk import Progressbar
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.2 alfa"					# version number
+VERSION		= "0.1.3 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
@@ -38,11 +38,11 @@ PROFILES	= {
 		"speed"				: 100,
 		"default"			: "0",
 		"background-color"	: "#000000",
-		"border-color"		: "#dddddd",
+		"border-color"		: "#cccccc",
 		"skybox-color"		: "#0f1114",
 		"font-color"		: "#ffffff",
 		"font-x"			: 150,
-		"font-y"			: 15,
+		"font-y"			: 14,
 		"offset_x"			: 29,
 		"offset_y"			: 109,
 		"size_x"			: 5,
@@ -83,7 +83,7 @@ LAYOUT		= {
 		"button-height"		: 20,
 		"layer"				: "#dddddd",
 		"layer-active"		: "#aaaacc",
-		"layer-color"		: "#222222",
+		"layer-color"		: "#000000",
 		"layer-outline"		: "#444444",
 		"layer-outline-highlight": "#ffffff",
 		"layer-offset"		: 30,
@@ -428,6 +428,8 @@ class Application(tk.Frame):
 		tk.Grid.columnconfigure(self.timeline, 1, weight=1)
 		self.timeline_layers= tk.Canvas(self.timeline, width=LAYOUT[self.skin]["layer-width"], height=height, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
 		self.timeline_layers.grid(row=0,column=0,sticky="w")
+		self.timeline_pos	= tk.Label(self.timeline,font="fixedsys 10",text="x:-100 y: -100 ")
+		self.timeline_pos.grid(row=1,column=0,sticky="en")
 		self.timeline_frames= tk.Canvas(self.timeline,height=height)
 		self.timeline_frames.grid(row=0,column=1,sticky="wen")
 		self.timeline_scrollbar_h= tk.Scrollbar(self.timeline,orient='horizontal',command=self.timeline_frames.xview)
@@ -453,7 +455,7 @@ class Application(tk.Frame):
 			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images[button],bg=LAYOUT[self.skin]["button"],bd=1)
 			self.stage_tools_buttons[button]["command"]	= lambda workaround=button: self.button_tool(workaround)
 			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUT[self.skin]["toolbar-column"])),column=int(i%LAYOUT[self.skin]["toolbar-column"]),sticky="w")
-		
+			
 		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUT[self.skin]["stage"], width=428, height=411, bd=0,highlightthickness=0)
 		self.stage_editor.grid(row=0,column=1,sticky="nswe")
 		self.stage_scrollbar_h= tk.Scrollbar(self.stage,orient='vertical',command=self.stage_editor.yview)
@@ -527,7 +529,7 @@ class Application(tk.Frame):
 				self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer"], outline=LAYOUT[self.skin]["layer-outline"])
 				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
 				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
-				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT[self.skin]["layer-color"],font="system 10", text=layer["name"],anchor="w")
+				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=layer["name"],anchor="w")
 			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 		try:
 			self.timeline_layers.delete(self.timeline_layers_select)
@@ -582,7 +584,7 @@ class Application(tk.Frame):
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
 						if i%10==0:
-							self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="system 10", text=str(int(i/10)))
+							self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
 							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 						elif i%5==0:
 							self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
@@ -616,8 +618,13 @@ class Application(tk.Frame):
 			
 			if not play:
 				self.stage_editor.delete("all")
-				self.stage_editor.create_rectangle(left, top, left+p_width*size, top+p_height*size, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
-
+				if size<12:
+					self.stage_editor.create_rectangle(left, top, left+p_width*size, top+p_height*size, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+				else:
+					for x in range(p_width):
+						for y in range(p_height):
+							self.stage_editor.create_rectangle(left+size*x, top+size*y, left+size*(x+1), top+size*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+						
 			min_x, min_y, max_x, max_y 	= 0, 0, p_width, p_height
 			self.render_cache			= {}
 			for i, layer in enumerate(reversed(self.animation["timeline"])):
@@ -666,7 +673,7 @@ class Application(tk.Frame):
 		if redraw:
 			self.stage_preview.delete("all")
 			self.building=self.stage_preview.create_image(int(self.animation["stage"]["images"]["preview"]["width"]/2),height-int(self.animation["stage"]["images"]["preview"]["height"]/2),image=self.images["preview"])
-			self.timer	= self.stage_preview.create_text(self.animation["stage"]["font-x"],self.animation["stage"]["font-y"],fill=self.animation["stage"]["font-color"],font="system 10", text="00:00 - 00:00")
+			self.timer	= self.stage_preview.create_text(self.animation["stage"]["font-x"],self.animation["stage"]["font-y"],fill=self.animation["stage"]["font-color"],font="fixedsys 10", text="00:00 - 00:00")
 			d			= self.animation_length()*self.animation["stage"]["speed"]/1000
 			min			= int(d/60)
 			sec			= int(d-min*60)
@@ -1337,16 +1344,19 @@ class Application(tk.Frame):
 	def mouse_move_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
+		
+		size	= max(1,self.animation["properties"]["zoom"])
+		width	= self.stage_editor.winfo_width()
+		height	= self.stage_editor.winfo_height()
+		p_width	= self.animation["stage"]["width"]
+		p_height= self.animation["stage"]["height"]
+		left	= int((width-p_width*size)/2)
+		top		= int((height-p_height*size)/2)
+		x		= int((self.stage_editor.canvasx(event.x)-left)/size)
+		y		= int((self.stage_editor.canvasy(event.y)-top)/size)
+		self.timeline_pos.configure(text="x:"+str(x).ljust(4)+" y:"+str(y).ljust(4)+" ")
+			
 		if self.is_m1_down or self.is_m3_down:
-			size	= max(1,self.animation["properties"]["zoom"])
-			width	= self.stage_editor.winfo_width()
-			height	= self.stage_editor.winfo_height()
-			p_width	= self.animation["stage"]["width"]
-			p_height= self.animation["stage"]["height"]
-			left	= int((width-p_width*size)/2)
-			top		= int((height-p_height*size)/2)
-			x		= int((self.stage_editor.canvasx(event.x)-left)/size)
-			y		= int((self.stage_editor.canvasy(event.y)-top)/size)
 			if self.start_x is None:
 				self.start_x	= x
 			if self.start_y is None:
@@ -1402,15 +1412,18 @@ class Application(tk.Frame):
 	def mouse_move_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
-		if self.is_m1_down or self.is_m3_down:
-			width	= self.stage_preview.winfo_width()
-			height	= self.stage_preview.winfo_height()
-			offset_x= self.animation["stage"]["offset_x"]
-			offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
-			px		= int(self.stage_preview.canvasx(event.x))
-			py		= int(self.stage_preview.canvasy(event.y))
-			x		= round((px-offset_x)/(self.animation["stage"]["size_x"]+(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
-			y		= round((py-offset_y)/(self.animation["stage"]["size_y"]+(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
+
+		width	= self.stage_preview.winfo_width()
+		height	= self.stage_preview.winfo_height()
+		offset_x= self.animation["stage"]["offset_x"]
+		offset_y= height-self.animation["stage"]["images"]["preview"]["height"]+self.animation["stage"]["offset_y"]		
+		px		= int(self.stage_preview.canvasx(event.x))
+		py		= int(self.stage_preview.canvasy(event.y))
+		x		= round((px-offset_x)/(self.animation["stage"]["size_x"]+(self.animation["stage"]["pad_x"]/self.animation["stage"]["skip_x"])))
+		y		= round((py-offset_y)/(self.animation["stage"]["size_y"]+(self.animation["stage"]["pad_y"]/self.animation["stage"]["skip_y"])))
+		self.timeline_pos.configure(text="x:"+str(x).ljust(4)+" y:"+str(y).ljust(4)+" ")
+		
+		if self.is_m1_down or self.is_m3_down:			
 			if self.start_x is None:
 				self.start_x	= x
 			if self.start_y is None:
@@ -1905,9 +1918,10 @@ class Application(tk.Frame):
 	def refresh_colorpicker(self):
 		for i, color in enumerate(self.animation["stage"]["palette"]):
 			self.stage_colorpicker_buttons[i+1].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
-		color		= self.animation["stage"]["palette"][0]
-		self.stage_colorpicker_buttons[0].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
-		self.color	= 0
+		#color		= self.animation["stage"]["palette"][0]
+		#self.stage_colorpicker_buttons[0].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
+		#self.color	= 0
+		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
 	
 	def change_layer(self,event=None):
 		if self.block_hotkeys:

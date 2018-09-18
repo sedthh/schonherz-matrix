@@ -33,7 +33,7 @@ A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) progr
 
 *Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 
-![editor snapshot](images/editor.gif)
+![editor snapshot](images/editor.png)
 
 ## Szerkesztés
 Az eszköztár eszközeinek segítségével a színpadra és az előnézeti ablakra is lehet rajzolni. A rajzok a kijelölt réteg, kijelölt képkockáján belül jelennek meg. Rajzolni az egér bal gombjával, törölni a jobb gombjával lehet. 
@@ -78,5 +78,7 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 - Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
 
 - A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.
+
+- Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra. Ugyanaz a python kód van futtatható exe fájlként a könyvtáraival becsomagolva, amit a GIT repoban is látsz. 
 
 - A forráskódon szépíteni fogunk, egyelőre az volt a cél, hogy be legyen időre fejezve és fusson.

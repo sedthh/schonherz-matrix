@@ -742,7 +742,11 @@ class Application(tk.Frame):
 	def title(self,name=""):
 		if not name:
 			name				= self.animation["properties"]["title"]
-		self.root.title(TITLE+" "+VERSION+" - "+name)
+		if not self.file:
+			file				= ""
+		else:
+			file				= " ("+self.file+")"
+		self.root.title(TITLE+" "+VERSION+" - "+name+file)
 		
 	### FUNCTIONS
 	
@@ -1067,12 +1071,12 @@ class Application(tk.Frame):
 			self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"matrix","data":deepcopy(frame)})
 		else:
 			self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"empty","data":{}})
-		self.edit_history_add("képkocka duplikálása")
+		self.edit_history_add("képkocka duplikálása utána")
 		self.render_frames(True)
 	
 	def edit_insert_empty(self,event=None):
 		self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"empty","data":{}})
-		self.edit_history_add("üres képkocka beszúrása")
+		self.edit_history_add("üres képkocka beszúrása utána")
 		self.render(True)
 		
 	def edit_extend(self,event=None):

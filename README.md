@@ -33,7 +33,7 @@ A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) progr
 
 *Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 
-![editor snapshot](images/editor.png)
+![editor snapshot](images/editor013.png)
 
 ## Szerkesztés
 Az eszköztár eszközeinek segítségével a színpadra és az előnézeti ablakra is lehet rajzolni. A rajzok a kijelölt réteg, kijelölt képkockáján belül jelennek meg. Rajzolni az egér bal gombjával, törölni a jobb gombjával lehet. 

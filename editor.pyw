@@ -7,6 +7,7 @@ import codecs
 import re
 from copy import deepcopy
 from webbrowser import open as webbrowser_open
+from math import floor, sqrt
 
 import asyncio
 import threading
@@ -28,13 +29,14 @@ from tkinter.ttk import Progressbar
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.4 alfa"					# version number
+VERSION		= "0.1.5 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
 		"profile"			: "sch",
 		"width"				: 32,
 		"height"			: 26,
+		"ratio"				: 1.5,
 		"speed"				: 100,
 		"default"			: "0",
 		"background-color"	: "#000000",
@@ -379,6 +381,8 @@ class Application(tk.Frame):
 		self.properties_menu= tk.Menu(self.menubar, tearoff=0)
 		self.properties_menu.add_command(label = "Animáció tulajdonságai", command = self.properties_animation)
 		self.properties_menu.add_command(label = "Színpad tulajdonságai", command = self.properties_stage, state=tk.DISABLED)
+		self.properties_menu.add_command(label = "Színpad nyújtása", command = self.properties_ratio,underline=1,accelerator="0")
+		self.root.bind_all("<Key-0>", self.properties_ratio)
 		self.properties_menu.add_command(label = "Zene betöltése", command = self.properties_music)
 		
 		self.transform_menu	= tk.Menu(self.menubar, tearoff=0)
@@ -396,8 +400,10 @@ class Application(tk.Frame):
 		self.root.bind_all("<Right>", self.transform_move_right)
 		
 		self.playback_menu	= tk.Menu(self.menubar, tearoff=0)
-		self.playback_menu.add_command(label = "Lejátszás", command = self.playback_toggle, underline=1,accelerator="Space")
+		self.playback_menu.add_command(label = "Lejátszás innen", command = self.playback_toggle, underline=1,accelerator="Space")
 		self.root.bind_all("<space>", self.playback_toggle)
+		self.playback_menu.add_command(label = "Lejátszás az elejéről", command = self.playback_start, underline=1,accelerator="Enter")
+		self.root.bind_all("<Return>", self.playback_start)
 		self.playback_menu.add_command(label = "Elejére", command = self.playback_rewind, underline=1,accelerator="Home")
 		self.root.bind_all("<Home>", self.playback_rewind)
 		self.playback_menu.add_command(label = "Végére", command = self.playback_end, underline=1,accelerator="End")
@@ -615,24 +621,25 @@ class Application(tk.Frame):
 	
 	def render_editor(self,redraw=False,play=False):
 		if redraw:
-			size	= max(1,self.animation["properties"]["zoom"])
+			size_x	= max(1,self.animation["properties"]["zoom"])
+			size_y	= int(size_x*self.animation["stage"]["ratio"])
 			width	= self.stage_editor.winfo_width()
 			height	= self.stage_editor.winfo_height()
 			p_width	= self.animation["stage"]["width"]
 			p_height= self.animation["stage"]["height"]
-			left	= int((width-p_width*size)/2)
-			top		= int((height-p_height*size)/2)
+			left	= int((width-p_width*size_x)/2)
+			top		= int((height-p_height*size_y)/2)
 			
 			if not play:
 				self.stage_editor.delete("all")
-				if size<12:
-					self.stage_editor.create_rectangle(left, top, left+p_width*size, top+p_height*size, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+				if size_x<12:
+					self.stage_editor.create_rectangle(left, top, left+p_width*size_x, top+p_height*size_y, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
 				else:
 					for x in range(p_width):
 						for y in range(p_height):
-							self.stage_editor.create_rectangle(left+size*x, top+size*y, left+size*(x+1), top+size*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])
-				self.stage_editor.create_line(left+int(p_width*size/2),top,left+int(p_width*size/2),top+p_height*size,fill=self.animation["stage"]["border-color"],width=2)
-				self.stage_editor.create_line(left,top+int(p_height*size/2),left+p_width*size,top+int(p_height*size/2),fill=self.animation["stage"]["border-color"],width=2)
+							self.stage_editor.create_rectangle(left+size_x*x, top+size_y*y, left+size_x*(x+1), top+size_y*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])
+				self.stage_editor.create_line(left+int(p_width*size_x/2),top,left+int(p_width*size_x/2),top+p_height*size_y,fill=self.animation["stage"]["border-color"],width=2)
+				self.stage_editor.create_line(left,top+int(p_height*size_y/2),left+p_width*size_x,top+int(p_height*size_y/2),fill=self.animation["stage"]["border-color"],width=2)
 						
 			min_x, min_y, max_x, max_y 	= 0, 0, p_width, p_height
 			self.render_cache			= {}
@@ -653,7 +660,7 @@ class Application(tk.Frame):
 								max_x	= max(max_x,x)
 								max_y	= max(max_y,y)
 								if layer["visible"]:
-									self.stage_editor.create_rectangle(left+x*size, top+y*size, left+(x+1)*size, top+(y+1)*size, fill=frame[x][y], outline="", stipple=stipple)										
+									self.stage_editor.create_rectangle(left+x*size_x, top+y*size_y, left+(x+1)*size_x, top+(y+1)*size_y, fill=frame[x][y], outline="", stipple=stipple)										
 							if layer["render"]:
 								if x>=0 and x<p_width and y>=0 and y<p_height:
 									if x not in self.render_cache:
@@ -671,7 +678,7 @@ class Application(tk.Frame):
 						else:
 							layer["frames"][select]["type"]="matrix"		
 			if not play:
-				self.stage_editor.configure(scrollregion=((min_x+1)*size,(min_y+1)*size,(max(p_width,max_x-min_x)+1)*size,(max(p_height,max_y-min_y)+1)*size))
+				self.stage_editor.configure(scrollregion=((min_x+1)*size_x,(min_y+1)*size_y,(max(p_width,max_x-min_x)+1)*size_x,(max(p_height,max_y-min_y)+1)*size_y))
 	
 	def render_preview(self,redraw=False,play=False):
 		width	= self.stage_preview.winfo_width()
@@ -717,14 +724,15 @@ class Application(tk.Frame):
 			self.stage_preview.itemconfig(self.timer,text=timestamp+" - "+self.duration)
 
 	def render_editor_helper(self,x,y,color):
-		size	= max(1,self.animation["properties"]["zoom"])
+		size_x	= max(1,self.animation["properties"]["zoom"])
+		size_y	= size_x*self.animation["stage"]["ratio"]
 		width	= self.stage_editor.winfo_width()
 		height	= self.stage_editor.winfo_height()
 		p_width	= self.animation["stage"]["width"]
 		p_height= self.animation["stage"]["height"]
-		left	= int((width-p_width*size)/2)
-		top		= int((height-p_height*size)/2)
-		self.stage_editor.create_rectangle(left+x*size, top+y*size, left+(x+1)*size, top+(y+1)*size, fill=color, outline="")
+		left	= int((width-p_width*size_x)/2)
+		top		= int((height-p_height*size_y)/2)
+		self.stage_editor.create_rectangle(left+x*size_x, top+y*size_y, left+(x+1)*size_x, top+(y+1)*size_y, fill=color, outline="")
 	
 	def render_preview_helper(self,x,y,color):
 		width	= self.stage_preview.winfo_width()
@@ -820,6 +828,9 @@ class Application(tk.Frame):
 						layer["frames"]	= frames
 						newdata["timeline"].append(layer)
 					self.animation		= newdata
+					### add variables for backward compatiblity
+					if "ratio" not in self.animation["stage"]:
+						self.animation["stage"]["ratio"]	= PROFILES["SCH"]["ratio"]
 					self.changes_made	= False
 					self.changes_draw	= False
 					self.edit_history_clear()
@@ -838,6 +849,7 @@ class Application(tk.Frame):
 			try:
 				self.loading(True)
 				f					= codecs.open(self.file,"w+",encoding="utf-8")
+				self.animation["version"]= self.version
 				f.write(json.dumps(self.animation))
 				f.close()
 				self.changes_made	= False
@@ -857,6 +869,7 @@ class Application(tk.Frame):
 			try:
 				self.loading(True)
 				f					= codecs.open(self.file,"w+",encoding="utf-8")
+				self.animation["version"]= self.version
 				f.write(json.dumps(self.animation))
 				f.close()
 				self.changes_made	= False
@@ -1132,6 +1145,15 @@ class Application(tk.Frame):
 		
 	def properties_stage(self,event=None):
 		self.log("Stage properties disabled")
+
+	def properties_ratio(self,event=None):
+		if self.is_playing:
+			return
+		if self.animation["stage"]["ratio"]==1:
+			self.animation["stage"]["ratio"]	= PROFILES["SCH"]["ratio"]
+		else:
+			self.animation["stage"]["ratio"]	= 1
+		self.render(True)
 		
 	def properties_music(self,event=None):
 		self.root.update()
@@ -1169,6 +1191,20 @@ class Application(tk.Frame):
 			self.playback_pause()
 		else:
 			self.playback_play()
+	
+	def playback_start(self,event=None):
+		if self.block_hotkeys:
+			return
+		if self.is_playing:
+			self.stage_playback_toggle.configure(image=self.images["play"])
+			self.is_playing		= False
+			self.music(False)
+			self.render(True)
+		else:
+			self.stage_playback_toggle.configure(image=self.images["pause"])
+			self.is_playing		= True
+			self.music(True)
+			self.async_play(True)
 	
 	def playback_play(self,event=None):
 		if self.block_hotkeys:
@@ -1359,15 +1395,16 @@ class Application(tk.Frame):
 		if self.is_playing or self.is_loading:
 			return
 		
-		size	= max(1,self.animation["properties"]["zoom"])
+		size_x	= max(1,self.animation["properties"]["zoom"])
+		size_y	= size_x*self.animation["stage"]["ratio"]
 		width	= self.stage_editor.winfo_width()
 		height	= self.stage_editor.winfo_height()
 		p_width	= self.animation["stage"]["width"]
 		p_height= self.animation["stage"]["height"]
-		left	= int((width-p_width*size)/2)
-		top		= int((height-p_height*size)/2)
-		x		= int((self.stage_editor.canvasx(event.x)-left)/size)
-		y		= int((self.stage_editor.canvasy(event.y)-top)/size)
+		left	= int((width-p_width*size_x)/2)
+		top		= int((height-p_height*size_y)/2)
+		x		= floor((self.stage_editor.canvasx(event.x)-left)/size_x)
+		y		= floor((self.stage_editor.canvasy(event.y)-top)/size_y)
 		self.timeline_pos.configure(text="x:"+str(x).ljust(4)+" y:"+str(y).ljust(4)+" ")
 			
 		if self.is_m1_down or self.is_m3_down:
@@ -2048,11 +2085,12 @@ class Application(tk.Frame):
 		except RuntimeError as e:
 			pass
 	
-	def async_play(self):
+	def async_play(self,from_start=False):
 		timestamp	= time.time()
 		length		= self.animation_length()
 		speed		= self.animation["stage"]["speed"]/1000
-		start		= self.animation["properties"]["selected_frame"]
+		start		= 0 if from_start else self.animation["properties"]["selected_frame"]
+		end			= self.animation["properties"]["selected_frame"] if from_start else length
 		start_time	= start*speed
 		self.stage_preview.delete(self.building)
 		if self.audio:
@@ -2060,7 +2098,8 @@ class Application(tk.Frame):
 			time.sleep(min(500,speed*2))
 		while True:
 			if not self.is_playing:
-				self.animation["properties"]["selected_frame"]	= start
+				if from_start:
+					self.animation["properties"]["selected_frame"]	= end
 				self.render(True)
 				return
 			current		= time.time()
@@ -2071,7 +2110,7 @@ class Application(tk.Frame):
 					lag			+= 1
 				self.animation["properties"]["selected_frame"]+=lag
 				if self.animation["properties"]["selected_frame"]>=length:
-					self.animation["properties"]["selected_frame"]	= start
+					self.animation["properties"]["selected_frame"]	= end
 					self.playback_pause()
 					return
 				#self.render_frames(False)

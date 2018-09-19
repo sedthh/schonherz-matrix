@@ -557,7 +557,7 @@ class Application(tk.Frame):
 					if i<len(self.animation["timeline"][j]["frames"]):
 						if self.animation["timeline"][j]["frames"][i]["type"]=="empty":
 							if cache_frame:
-								if i*width>visible_min:
+								if i*width>visible_min and ((i-cache_frame)*width+1)<visible_max:
 									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-empty"]
@@ -565,7 +565,7 @@ class Application(tk.Frame):
 							outline	= LAYOUT[self.skin]["frame-border"]
 						elif self.animation["timeline"][j]["frames"][i]["type"]=="matrix":
 							if cache_frame:	
-								if i*width>visible_min:
+								if i*width>visible_min and ((i-cache_frame)*width+1)<visible_max:
 									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-matrix"]
@@ -578,7 +578,7 @@ class Application(tk.Frame):
 							cache_frame+=1
 						last		= color
 						if not cache_frame:
-							if i*width>visible_min and i*width<visible_max:	
+							if (i+1)*width>visible_min and i*width<visible_max:	
 								self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline=color)
 					else:
 						#color	= ""
@@ -588,7 +588,7 @@ class Application(tk.Frame):
 						outline	= LAYOUT[self.skin]["frame-color"]	
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
-						if i*width>visible_min and i*width<visible_max:
+						if (i+1)*width+1>visible_min and i*width-1<visible_max:
 							if i%10==0:
 								self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
 								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
@@ -597,7 +597,7 @@ class Application(tk.Frame):
 							else:
 								self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
 				if cache_frame:
-					if len(self.animation["timeline"][j]["frames"])*width>visible_min:
+					if len(self.animation["timeline"][j]["frames"])*width>visible_min and ((len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1)<visible_max:
 						self.timeline_frames.create_rectangle(max(visible_min,(len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1), offset+j*height+1, min(visible_max,len(self.animation["timeline"][j]["frames"])*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 					cache_frame=0				
 			self.timeline_frames.create_line(max(visible_min,0), offset, min(visible_max,(max(max_width,max_frames*width)+1)*width+1), offset, fill=LAYOUT[self.skin]["layer-color"])

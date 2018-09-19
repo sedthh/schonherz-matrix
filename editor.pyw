@@ -255,6 +255,7 @@ class Application(tk.Frame):
 		self.block_hotkeys	= False
 		self.progress_window= False
 		self.progress_bar	= False
+		self.warned_about_vlc=False
 
 		# images
 		self.path			= os.path.dirname(os.path.realpath(__file__))	
@@ -2039,7 +2040,9 @@ class Application(tk.Frame):
 				self.properties_menu.entryconfigure(3, label="Zene nem található: "+file)
 		else:
 			if "vlc" not in modules:
-				messagebox.showwarning("A VLC nem elérhető","A lejátszás alatt nem lesz az animációknak hangja ezen a számítógépen.")
+				if not self.warned_about_vlc:
+					self.warned_about_vlc	= True
+					messagebox.showwarning("A VLC nem elérhető","A lejátszás alatt nem lesz az animációknak hangja ezen a számítógépen.")
 			self.properties_menu.entryconfigure(3, label="Zene betöltése")
 	
 	def loading(self,update=True):

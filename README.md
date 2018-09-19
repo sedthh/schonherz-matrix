@@ -82,3 +82,7 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 - Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra. Ugyanaz a python kód van futtatható exe fájlként a könyvtáraival becsomagolva, amit a GIT repoban is látsz. 
 
 - A forráskódon szépíteni fogunk, egyelőre az volt a cél, hogy be legyen időre fejezve és fusson.
+
+- Két fajta lejátszás létezik: lejátszás innen (space) és lejátszás az elejétől (enter) amelyek máshonnan indítják a lejátszást és megálláskor máshova ugranak vissza a szerkesztőben. A piros lejátszó gomb az aktuális pozíciótól kezd el játszani.
+
+- A tulajdonságok menüben a "Színpad nyújtása" kiválasztásával vagy a 0 gombbal lehet a szerkesztőfelület pixeleinek arányát változtatni, hogy jobban hasonlítson a végeredményre a Schönherz falán. 

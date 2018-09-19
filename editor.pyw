@@ -8,13 +8,15 @@ import re
 from copy import deepcopy
 from webbrowser import open as webbrowser_open
 from math import floor, sqrt
+from sys import modules
 
 import asyncio
 import threading
 try:
 	import vlc
 except:
-	# crashes with random errors if certain dll files are missing, and did not have the time to debug it
+	# Crashes with random errors if certain dll files are missing, and did not have the time to debug it.
+	# Vlc errors will be handled later.
 	pass
 
 import tkinter as tk
@@ -2036,6 +2038,8 @@ class Application(tk.Frame):
 				file			= self.animation["properties"]["music"].replace("/","\\").split("\\")[-1]
 				self.properties_menu.entryconfigure(3, label="Zene nem található: "+file)
 		else:
+			if "vlc" not in modules:
+				messagebox.showwarning("A VLC nem elérhető","A lejátszás alatt nem lesz az animációknak hangja ezen a számítógépen.")
 			self.properties_menu.entryconfigure(3, label="Zene betöltése")
 	
 	def loading(self,update=True):

@@ -568,15 +568,24 @@ class Application(tk.Frame):
 		max_height		= (len(self.animation["timeline"])+1)*height
 		max_width		= max(60,int(self.timeline_frames.winfo_width()/width)+1)
 		visible_min 	= self.timeline_frames.canvasx(0)
+		visible_min_i	= max(0,int(visible_min/width)-1)
 		visible_max 	= self.timeline_frames.canvasx(self.timeline_frames.winfo_width())
+		visible_max_i	= int(visible_max/width)+1
 		if redraw:
 			self.timeline_frames.delete("all")
 			for j in range(len(self.animation["timeline"])):
-				last		= ""
-				color		= ""
-				stipple		= ""
+				workaround	= self.animation["timeline"][j]["frames"][min(visible_min_i,len(self.animation["timeline"][j]["frames"])-1)]["type"]
+				if workaround=="link":
+					workaround	= self.animation["timeline"][j]["frames"][self.animation["timeline"][j]["frames"][visible_min_i]["data"]]["type"]
+				if workaround=="empty":		
+					color		= LAYOUT[self.skin]["frame-empty"]
+				else:
+					color		= LAYOUT[self.skin]["frame-matrix"]
+				last		= color
+				stipple		= "gray50"
+				outline		= LAYOUT[self.skin]["frame-color"]
 				cache_frame	= 0
-				for i in range(max(max_width,max_frames*width)+1):
+				for i in range(visible_min_i,max(max_width,max_frames*width)+1):
 					if i<len(self.animation["timeline"][j]["frames"]):
 						if self.animation["timeline"][j]["frames"][i]["type"]=="empty":
 							if cache_frame:
@@ -636,8 +645,8 @@ class Application(tk.Frame):
 		self.timeline_frames.configure(scrollregion=(0,0,(max(max_width,max_frames)+10)*width,height))
 		self.timeline_frames.update()
 	
-	# render editor & pixels visible at the current position (based on selected layer and frame)
-	def render_editor(self,redraw=False,play=False):
+	# render stage & pixels visible at the current position (based on selected layer and frame)
+	def render_stage(self,redraw=False,play=False):
 		if redraw:
 			size_x	= max(1,self.animation["properties"]["zoom"])
 			size_y	= int(size_x*self.animation["stage"]["ratio"])
@@ -699,7 +708,7 @@ class Application(tk.Frame):
 			if not play:
 				self.stage_editor.configure(scrollregion=((min_x+1)*size_x,(min_y+1)*size_y,(max(p_width,max_x-min_x)+1)*size_x,(max(p_height,max_y-min_y)+1)*size_y))
 	
-	# render preview window, timer and currently visible pixels that were calculated in "render_editor" function (based on visible frames in all layers)
+	# render preview window, timer and currently visible pixels that were calculated in "render_stage" function (based on visible frames in all layers)
 	def render_preview(self,redraw=False,play=False):
 		width	= self.stage_preview.winfo_width()
 		height	= self.stage_preview.winfo_height()
@@ -743,8 +752,8 @@ class Application(tk.Frame):
 			timestamp	= str(min).zfill(2)+":"+str(sec).zfill(2)
 			self.stage_preview.itemconfig(self.timer,text=timestamp+" - "+self.duration)
 
-	# quickly draw pixels on editor without much overhead (please call "render_editor" after)
-	def render_editor_helper(self,x,y,color):
+	# quickly draw pixels on editor without much overhead (please call "render_stage" after)
+	def render_stage_helper(self,x,y,color):
 		size_x	= max(1,self.animation["properties"]["zoom"])
 		size_y	= size_x*self.animation["stage"]["ratio"]
 		width	= self.stage_editor.winfo_width()
@@ -772,7 +781,7 @@ class Application(tk.Frame):
 			self.title()
 			self.render_layers(redraw)
 			self.render_frames(redraw)
-			self.render_editor(redraw)
+			self.render_stage(redraw)
 			self.render_preview(redraw)
 			self.changes_draw = False
 		except Exception as e:
@@ -904,6 +913,7 @@ class Application(tk.Frame):
 				self.changes_made	= False
 				self.changes_draw	= False
 				self.loading(False)
+				self.render(True)
 			except Exception as e:
 				return self.error("Nem sikerült menteni!",e)
 	
@@ -1378,7 +1388,7 @@ class Application(tk.Frame):
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
-		self.render_editor(self.changes_draw)
+		self.render_stage(self.changes_draw)
 		self.render_preview(self.changes_draw)
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
@@ -1397,7 +1407,7 @@ class Application(tk.Frame):
 			self.render_frames(False)
 			if self.is_playing:
 				return
-			self.render_editor(True)
+			self.render_stage(True)
 			self.render_preview(True)
 	
 	# select layers and current frame
@@ -1415,7 +1425,7 @@ class Application(tk.Frame):
 		self.animation["properties"]["selected_frame"] = x
 		self.render_layers(False)
 		self.render_frames(False)
-		self.render_editor(True)
+		self.render_stage(True)
 		self.render_preview(True)
 	
 	# right click on layers will select clicked layer and popup playback functions	
@@ -1479,7 +1489,7 @@ class Application(tk.Frame):
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
-		self.render_editor(self.changes_draw)
+		self.render_stage(self.changes_draw)
 		self.render_preview(self.changes_draw)
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
@@ -1565,7 +1575,7 @@ class Application(tk.Frame):
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.render_frames(self.changes_draw)
-		self.render_editor(self.changes_draw)
+		self.render_stage(self.changes_draw)
 		self.render_preview(self.changes_draw)
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
@@ -1771,7 +1781,7 @@ class Application(tk.Frame):
 			self.animation["properties"]["zoom"] = min(int(self.animation["properties"]["zoom"]/5)*5+5,35)
 		else:
 			self.animation["properties"]["zoom"] = max(int(self.animation["properties"]["zoom"]/5)*5-5,1)
-		self.render_editor(True)
+		self.render_stage(True)
 		self.cursor("hand2")
 	
 	# select color from selected layer's current frame on stage / visible pixel in window on preview
@@ -1814,7 +1824,7 @@ class Application(tk.Frame):
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["type"] = "empty"
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
 		if is_editor:
-			self.render_editor_helper(x,y,color)
+			self.render_stage_helper(x,y,color)
 		else:
 			self.render_preview_helper(x,y,color)
 
@@ -1833,7 +1843,7 @@ class Application(tk.Frame):
 			color		= self.animation["stage"]["background-color"]
 		if hint:
 			if is_editor:
-				self.render_editor(True)
+				self.render_stage(True)
 			else:
 				self.render_preview(True)
 		else:
@@ -1848,7 +1858,7 @@ class Application(tk.Frame):
 		while True:
 			if hint:
 				if is_editor:
-					self.render_editor_helper(x0,y0,color)
+					self.render_stage_helper(x0,y0,color)
 				else:
 					self.render_preview_helper(x0,y0,color)
 			else:
@@ -1905,7 +1915,7 @@ class Application(tk.Frame):
 			color		= self.animation["stage"]["background-color"]
 		if hint:
 			if is_editor:
-				self.render_editor(True)
+				self.render_stage(True)
 			else:
 				self.render_preview(True)
 		else:
@@ -1919,7 +1929,7 @@ class Application(tk.Frame):
 			for _y in range(y0,y1):
 				if hint:
 					if is_editor:
-						self.render_editor_helper(_x,_y,color)
+						self.render_stage_helper(_x,_y,color)
 					else:
 						self.render_preview_helper(_x,_y,color)
 				else:
@@ -2267,7 +2277,7 @@ class Application(tk.Frame):
 					self.playback_pause()
 					return
 				#self.render_frames(False)
-				self.render_editor(True,True)
+				self.render_stage(True,True)
 				self.render_preview(False,True)
 				self.root.update()
 				try:

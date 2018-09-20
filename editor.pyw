@@ -103,8 +103,8 @@ LAYOUT		= {
 		"palette-length"	: 20,
 		"palette-width"		: 20,
 		"palette-height"	: 20,
-		"palette-active-width"	: 40,
-		"palette-active-height"	: 20,
+		"palette-select-width"	: 40,
+		"palette-select-height"	: 20,
 		"images"			: {
 			"icon"				: {
 				"src"					: "icon.gif",
@@ -176,8 +176,13 @@ LAYOUT		= {
 				"width"					: 20,
 				"height"				: 20
 			},
-			"palette-active"	: {
-				"src"					: "palette-active.gif",
+			"palette-active"		: {
+				"src"					: "palette-active.png",
+				"width"					: 20,
+				"height"				: 20
+			},
+			"palette-select"	: {
+				"src"					: "palette-select.gif",
 				"width"					: 40,
 				"height"				: 20
 			},
@@ -483,7 +488,7 @@ class Application(tk.Frame):
 		self.stage_colorpicker.grid(row=3,column=1,sticky="nswe")
 		self.stage_colorpicker_buttons=[]
 		color	= self.animation["stage"]["palette"][self.color]
-		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-active-width"],height=LAYOUT[self.skin]["palette-active-height"],image=self.images["palette-active"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-select-width"],height=LAYOUT[self.skin]["palette-select-height"],image=self.images["palette-select"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 		self.stage_colorpicker_buttons[-1]["command"]	= lambda: self.button_colorpicker(-1)
 		self.stage_colorpicker_buttons[-1].grid(row=0,column=0,sticky="w")
 		tk.Frame(self.stage_colorpicker, bg=LAYOUT[self.skin]["toolbar"],width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"]).grid(row=0, column=1,sticky="nswe")
@@ -492,7 +497,9 @@ class Application(tk.Frame):
 			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
 			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
 			self.stage_colorpicker_buttons[-1].bind("<Button-3>",lambda event, workaround=i:[self.button_colorpicker(workaround),self.button_colorpicker(-1)])
-			
+		self.stage_colorpicker_buttons[0].bind("<Button-3>",lambda event:self.button_colorpicker(-1))
+		self.stage_colorpicker_buttons[1].configure(image=self.images["palette-active"])	
+		
 		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=300, height=LAYOUT[self.skin]["toolbar-height"])
 		self.stage_playback.grid(row=3,column=3)
 		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["rewind"],bg=LAYOUT[self.skin]["button"],command=self.playback_rewind)
@@ -1959,6 +1966,11 @@ class Application(tk.Frame):
 			new_color	= askcolor(initialcolor=self.animation["stage"]["palette"][self.color])
 			self.animation["stage"]["palette"][self.color]	= new_color[1]
 			self.stage_colorpicker_buttons[self.color+1].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
+		for i,palette in enumerate(self.animation["stage"]["palette"]):
+			if i==self.color:
+				self.stage_colorpicker_buttons[(i+1)].configure(image=self.images["palette-active"])	
+			elif i!=-1:
+				self.stage_colorpicker_buttons[(i+1)].configure(image=self.images["palette"])	
 		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
 		self.edit_history_add("színkeverés")
 
@@ -1976,6 +1988,7 @@ class Application(tk.Frame):
 		#self.stage_colorpicker_buttons[0].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
 		#self.color	= 0
 		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
+		self.stage_colorpicker_buttons[(self.color+1)].configure(image=self.images["palette-active"])	
 	
 	def change_layer(self,event=None):
 		if self.block_hotkeys:

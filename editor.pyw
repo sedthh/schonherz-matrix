@@ -177,7 +177,7 @@ LAYOUT		= {
 				"height"				: 20
 			},
 			"palette-active"		: {
-				"src"					: "palette-active.png",
+				"src"					: "palette-active.gif",
 				"width"					: 20,
 				"height"				: 20
 			},

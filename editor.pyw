@@ -15,8 +15,8 @@ import threading
 try:
 	import vlc
 except:
-	# Crashes with random errors if certain dll files are missing, and did not have the time to debug it.
-	# Vlc errors will be handled later.
+	# crashes with random errors if certain dll files are missing, and did not have the time to debug it
+	# VLC errors will be handled later
 	pass
 
 import tkinter as tk
@@ -26,7 +26,7 @@ from tkinter import messagebox
 from tkinter.colorchooser import askcolor
 from tkinter.ttk import Progressbar
 
-### GLOBALS
+##### GLOBALS
 
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
@@ -220,7 +220,7 @@ LAYOUT		= {
 	}
 }
 
-### 
+##### EDITOR WINDOW
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -293,14 +293,16 @@ class Application(tk.Frame):
 		except Exception as e:
 			self.error("Nem sikerült létrehozni a menüelemeket!",e)
 		
+		# finishing window configuration
 		self.edit_history_clear()
-		self.render(True)
 		self.root.bind("<Configure>", self.on_resize)
 		self.root.bind("<FocusIn>", self.on_focus)
 		self.root.call('wm', 'iconphoto', self.root._w, self.images["icon"]) 
 		self.on_focus()
 		self.music_load()
+		self.render(True)
 	
+	# generate required object for animation data
 	def new_animation(self):
 		data				= {
 			"header"			: HEADER,
@@ -333,6 +335,7 @@ class Application(tk.Frame):
 			})
 		return data
 	
+	# create menu for main window and for some right click popups
 	def create_menubar(self):		
 		self.menubar		= tk.Menu(self.root)
 		
@@ -435,7 +438,8 @@ class Application(tk.Frame):
 		self.root.config(menu=self.menubar)
 		
 		self.root.bind_all("<Tab>", self.change_layer)
-		
+	
+	# create tkinter widgets for timeline (layers & frame holder)
 	def create_timeline(self):
 		height				= LAYOUT[self.skin]["layer-height"]*3+LAYOUT[self.skin]["layer-offset"]
 		self.timeline 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
@@ -458,6 +462,7 @@ class Application(tk.Frame):
 		self.timeline_layers.bind('<Leave>',self.mouse_to_default)
 		self.timeline_frames.bind("<MouseWheel>", self.mouse_wheel_frames)
 
+	# create tkitner widgets for stage (toolbar, stage, preview, color palette, playback)
 	def create_stage(self):
 		self.stage 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["toolbar"], bd=0)
 		tk.Grid.columnconfigure(self.stage, 1, weight=1)
@@ -535,6 +540,7 @@ class Application(tk.Frame):
 		self.button_tool(LAYOUT[self.skin]["tools"][0])
 	
 	### RENDER ELEMENTS
+	# render layers & layer select
 	def render_layers(self,redraw=False):
 		offset 			= LAYOUT[self.skin]["layer-offset"]
 		height 			= LAYOUT[self.skin]["layer-height"]-1
@@ -553,6 +559,7 @@ class Application(tk.Frame):
 			pass
 		self.timeline_layers_select	= self.timeline_layers.create_rectangle(1, offset+self.animation["properties"]["selected_layer"]*height+1, width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height-1, fill=LAYOUT[self.skin]["layer-active"], outline="", stipple="gray50")
 
+	# render visible frames, frame timing & frame select
 	def render_frames(self,redraw=False):
 		offset 			= LAYOUT[self.skin]["layer-offset"]-1
 		width			= LAYOUT[self.skin]["frame-width"]
@@ -629,6 +636,7 @@ class Application(tk.Frame):
 		self.timeline_frames.configure(scrollregion=(0,0,(max(max_width,max_frames)+10)*width,height))
 		self.timeline_frames.update()
 	
+	# render editor & pixels visible at the current position (based on selected layer and frame)
 	def render_editor(self,redraw=False,play=False):
 		if redraw:
 			size_x	= max(1,self.animation["properties"]["zoom"])
@@ -672,6 +680,7 @@ class Application(tk.Frame):
 								if layer["visible"]:
 									self.stage_editor.create_rectangle(left+x*size_x, top+y*size_y, left+(x+1)*size_x, top+(y+1)*size_y, fill=frame[x][y], outline="", stipple=stipple)										
 							if layer["render"]:
+								# create cache for preview
 								if x>=0 and x<p_width and y>=0 and y<p_height:
 									if x not in self.render_cache:
 										self.render_cache[x]	= {}
@@ -690,6 +699,7 @@ class Application(tk.Frame):
 			if not play:
 				self.stage_editor.configure(scrollregion=((min_x+1)*size_x,(min_y+1)*size_y,(max(p_width,max_x-min_x)+1)*size_x,(max(p_height,max_y-min_y)+1)*size_y))
 	
+	# render preview window, timer and currently visible pixels that were calculated in "render_editor" function (based on visible frames in all layers)
 	def render_preview(self,redraw=False,play=False):
 		width	= self.stage_preview.winfo_width()
 		height	= self.stage_preview.winfo_height()
@@ -733,6 +743,7 @@ class Application(tk.Frame):
 			timestamp	= str(min).zfill(2)+":"+str(sec).zfill(2)
 			self.stage_preview.itemconfig(self.timer,text=timestamp+" - "+self.duration)
 
+	# quickly draw pixels on editor without much overhead (please call "render_editor" after)
 	def render_editor_helper(self,x,y,color):
 		size_x	= max(1,self.animation["properties"]["zoom"])
 		size_y	= size_x*self.animation["stage"]["ratio"]
@@ -744,6 +755,7 @@ class Application(tk.Frame):
 		top		= int((height-p_height*size_y)/2)
 		self.stage_editor.create_rectangle(left+x*size_x, top+y*size_y, left+(x+1)*size_x, top+(y+1)*size_y, fill=color, outline="")
 	
+	# quickly draw pixels on preview without much overhead (please call "render_preview" after)
 	def render_preview_helper(self,x,y,color):
 		width	= self.stage_preview.winfo_width()
 		height	= self.stage_preview.winfo_height()
@@ -753,6 +765,7 @@ class Application(tk.Frame):
 		py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
 		self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
 	
+	# call most common render functions at once
 	def render(self,redraw=False):
 		self.loading(True)
 		try:
@@ -766,6 +779,7 @@ class Application(tk.Frame):
 			self.error("Sikertelen az elemek kirajzolása!",e)
 		self.loading(False)
 	
+	# change title of main window
 	def title(self,name=""):
 		if not name:
 			name				= self.animation["properties"]["title"]
@@ -774,9 +788,11 @@ class Application(tk.Frame):
 		else:
 			file				= " ("+self.file+")"
 		self.root.title(TITLE+" "+VERSION+" - "+name+file)
-		
-	### FUNCTIONS
 	
+	##### MENU FUNCITONS #####
+	### FILE FUNCTIONS
+	
+	# new animation
 	def file_new(self,event=None):
 		self.playback_pause()
 		if self.changes_made:
@@ -793,7 +809,8 @@ class Application(tk.Frame):
 		self.refresh_colorpicker()
 		self.music_load()
 		self.render(True)
-		
+	
+	# open animation (check if it's an actual animation file & check it's verion)
 	def file_open(self,event=None):
 		self.playback_pause()
 		if self.changes_made:
@@ -853,7 +870,8 @@ class Application(tk.Frame):
 				self.error("Nem sikerült megnyitni a fájlt!",e)
 			self.render(True)
 			self.loading(False)
-		
+	
+	# save animation
 	def file_save(self,event=None):
 		if self.file:
 			try:
@@ -870,6 +888,7 @@ class Application(tk.Frame):
 		else:
 			self.file_save_as(event)
 	
+	# save animation as
 	def file_save_as(self,event=None):
 		self.playback_pause()
 		self.root.update()
@@ -888,6 +907,7 @@ class Application(tk.Frame):
 			except Exception as e:
 				return self.error("Nem sikerült menteni!",e)
 	
+	# export animation as *.qp4 (calls actual async export function)
 	def file_export(self,event=None):
 		if self.is_loading:
 			return
@@ -896,13 +916,15 @@ class Application(tk.Frame):
 		file				= asksaveasfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),),title = "Exportálás")
 		if file:
 			self.async_run(self.async_export(file))
-			
+	
+	# import animation as *.qp4 (calls actual async import function)
 	def file_import(self,event=None):
 		self.root.update()
 		file				= askopenfilename(defaultextension="*.qp4",initialdir="C:/Documents/",filetypes =(("AnimEditor2012 fájl", "*.qp4"),),title = "Importálás")
 		if file:
 			self.async_run(self.async_import(file))
 	
+	# see if changes were made before closing window (automatically called when the X button is pressed)
 	def file_quit(self,event=None):
 		if self.changes_made:
 			response			= messagebox.askyesnocancel(title="Kilépés a szerkesztőből", message="Kilépés előtt szeretnéd menteni a változtatásokat?", default=messagebox.YES)
@@ -915,6 +937,9 @@ class Application(tk.Frame):
 		except:
 			pass
 
+	### EDIT FUNCTIONS
+	
+	# undo
 	def edit_history_back(self,event=None):
 		if self.history:		
 			if self.history_index>0:
@@ -940,6 +965,7 @@ class Application(tk.Frame):
 			self.refresh_colorpicker()
 			self.render(True)
 	
+	# redo
 	def edit_history_forward(self,event=None):
 		if self.history:		
 			if self.history_index<len(self.history)-1:
@@ -964,7 +990,8 @@ class Application(tk.Frame):
 			self.history_events	+= 1
 			self.refresh_colorpicker()
 			self.render(True)
-		
+	
+	# add event to history
 	def edit_history_add(self,type=""):
 		if not LAYOUT[self.skin]["history_size"]:
 			self.history	= []
@@ -987,7 +1014,8 @@ class Application(tk.Frame):
 			if len(self.history)>1:
 				self.changes_made	= True
 		self.history_events	+= 1
-		
+	
+	# clear history	and add an empty event
 	def edit_history_clear(self):
 		self.history		= []
 		self.history_index	= 0
@@ -997,6 +1025,7 @@ class Application(tk.Frame):
 		self.edit_menu.entryconfigure(1, state=tk.DISABLED)
 		self.edit_menu.entryconfigure(1, label="Újra")
 	
+	# cut frame
 	def edit_cut(self,event=None):
 		frame, select	= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
 		data	= {
@@ -1011,7 +1040,8 @@ class Application(tk.Frame):
 		self.root.clipboard_append(json.dumps(data))
 		self.edit_menu.entryconfigure(5, state=tk.NORMAL)
 		self.edit_menu.entryconfigure(6, state=tk.NORMAL)
-		
+	
+	# copy frame	
 	def edit_copy(self,event=None):
 		frame, select	= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
 		data	= {
@@ -1027,6 +1057,7 @@ class Application(tk.Frame):
 		self.edit_menu.entryconfigure(5, state=tk.NORMAL)
 		self.edit_menu.entryconfigure(6, state=tk.NORMAL)
 	
+	# paste frame (overwrite)
 	def edit_paste(self,event=None):
 		try:
 			clipboard	= json.loads(self.root.clipboard_get())
@@ -1052,7 +1083,8 @@ class Application(tk.Frame):
 			else:
 				self.edit_history_add("másolás vágólapról")
 		self.render(True)
-		
+	
+	# paste frame (insert after selected)
 	def edit_insert(self,event=None):
 		try:
 			clipboard	= json.loads(self.root.clipboard_get())
@@ -1079,6 +1111,7 @@ class Application(tk.Frame):
 				self.edit_history_add("másolás és beszúrás vágólapról")
 		self.render(True)
 	
+	# remove frame
 	def edit_remove(self,event=None):
 		if self.block_hotkeys:
 			return
@@ -1086,6 +1119,7 @@ class Application(tk.Frame):
 		self.edit_history_add("képkocka törlése")
 		self.render(True)
 	
+	# delete contents of a frame
 	def edit_empty(self,event=None):
 		if self.block_hotkeys:
 			return
@@ -1096,7 +1130,8 @@ class Application(tk.Frame):
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][self.animation["properties"]["selected_frame"]]={"type":"empty","data":{}}
 			self.edit_history_add("képkocka tartalmának kiürítése")
 			self.render(True)
-		
+	
+	# duplicate selected frame
 	def edit_duplicate(self,event=None):
 		frame,select	= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
 		if frame:
@@ -1106,23 +1141,27 @@ class Application(tk.Frame):
 		self.edit_history_add("képkocka duplikálása utána")
 		self.render_frames(True)
 	
+	# insert an empty frame
 	def edit_insert_empty(self,event=None):
 		self.insert_frame_extra(self.animation["properties"]["selected_frame"],{"type":"empty","data":{}})
 		self.edit_history_add("üres képkocka beszúrása utána")
 		self.render(True)
-		
+	
+	# extend duration of selected frame
 	def edit_extend(self,event=None):
 		self.extend_frame(self.animation["properties"]["selected_frame"])
 		self.edit_history_add("képkocka hosszabbítása")
 		self.render_frames(True)
 		
+	# reduce duration of selected frame
 	def edit_reduce(self,event=None):
 		self.reduce_frame(self.animation["properties"]["selected_frame"])
 		self.edit_history_add("képkocka rövidítése")
 		self.render_frames(True)
 		
-	###
+	### SET ANIMATION PROPERTIES
 	
+	# set title, team for animation (blocks hotkeys while typing)
 	def properties_animation(self,event=None):
 		self.block_hotkeys	= True
 		self.properties_window= tk.Toplevel(self.root)
@@ -1142,20 +1181,24 @@ class Application(tk.Frame):
 		save	= tk.Button(self.properties_window,text="Mentés",command=lambda:[self.properties_update({"title":self.v_title.get(),"team":self.v_team.get()}),self.properties_quit()])
 		save.grid(row=2,column=1,sticky="we", padx=(10,20), pady=(10,10))
 		self.properties_window.protocol("WM_DELETE_WINDOW", self.properties_quit)
-		
+	
+	# animation properties window is closed (reenables hotkeys as the user is no longer typing)
 	def properties_quit(self,event=None):
 		self.block_hotkeys	= False
 		self.properties_window.destroy()
 		
+	# update animation properties
 	def properties_update(self,data):
 		for key in data:
 			self.animation["properties"][key] = data[key]
 		self.edit_history_add("tulajdonságok szerkesztése")
 		self.render(True)
-		
+	
+	# set the properties used by rendering functions of the current animation profile (not yet implemented)
 	def properties_stage(self,event=None):
 		self.log("Stage properties disabled")
 
+	# stretch the stage to resemble the pixel offsets in preview
 	def properties_ratio(self,event=None):
 		if self.is_playing:
 			return
@@ -1164,7 +1207,8 @@ class Application(tk.Frame):
 		else:
 			self.animation["stage"]["ratio"]	= 1
 		self.render(True)
-		
+	
+	# load path to mp3 file (playback of selected mp3 is handled elsewhere)
 	def properties_music(self,event=None):
 		self.root.update()
 		file				= askopenfilename(defaultextension="*.mp3",initialdir="C:/Documents/",filetypes =(("MP3 hangfájlok", "*.mp3"),),title = "Hangfájl hozzáadása")
@@ -1172,36 +1216,50 @@ class Application(tk.Frame):
 			self.animation["properties"]["music"]	= file
 			self.music_load()
 	
+	### TRANSFORM FUNCTIONS
+	
+	# rotate 90 deg right
 	def transform_rotate_right(self,event=None):
 		self.rotate(True)
 	
+	# rotate 90 deg left
 	def transform_rotate_left(self,event=None):
 		self.rotate(False)
 		
+	# flip horizontally
 	def transform_flip_horizontal(self,event=None):
 		self.flip(True)
 	
+	# flip vertically
 	def transform_flip_vertical(self,event=None):
 		self.flip(False)
-			
+	
+	# move all selected pixels one pixel up
 	def transform_move_up(self,event=None):
 		self.move(0,-1)
 	
+	# move all selected pixels one pixeldown
 	def transform_move_down(self,event=None):
 		self.move(0,1)
 		
+	# move all selected pixels one pixel left
 	def transform_move_left(self,event=None):
 		self.move(-1,0)
 		
+	# move all selected pixels one pixel right
 	def transform_move_right(self,event=None):
 		self.move(1,0)
 
+	### PLAYBACK FUNCTIONS	
+	
+	# toggle play/pause from/at actual position
 	def playback_toggle(self,event=None):
 		if self.is_playing:
 			self.playback_pause()
 		else:
 			self.playback_play()
 	
+	# start palyback from the beggining of the animation (handles funcitons in toggle, as it was added later with workarounds)
 	def playback_start(self,event=None):
 		if self.block_hotkeys:
 			return
@@ -1216,6 +1274,7 @@ class Application(tk.Frame):
 			self.music(True)
 			self.async_play(True)
 	
+	# play animation from current position
 	def playback_play(self,event=None):
 		if self.block_hotkeys:
 			return
@@ -1225,6 +1284,7 @@ class Application(tk.Frame):
 		#self.async_run(self.async_play())
 		self.async_play()
 	
+	# pause animatino at current position
 	def playback_pause(self,event=None):
 		if self.block_hotkeys:
 			return
@@ -1232,52 +1292,64 @@ class Application(tk.Frame):
 		self.is_playing		= False
 		self.music(False)
 		self.render(True)
-		
+	
+	# stop = pause animation and rewind
 	def playback_stop(self,event=None):
 		if self.block_hotkeys:
 			return
 		self.playback_pause()
 		self.playback_rewind()
 	
+	# jump to beginning of animation
 	def playback_rewind(self,event=None):
 		if self.block_hotkeys:
 			return
 		self.animation["properties"]["selected_frame"]	= 0
 		self.render(True)
 	
+	# jump to end of animation
 	def playback_end(self,event=None):
 		if self.block_hotkeys:
 			return
 		self.playback_pause()
 		self.animation["properties"]["selected_frame"]	= max(0,self.animation_length()-1)
 		self.render(True)
-		
+	
+	# jump to next keyframe	in layer
 	def playback_back(self,event=None):
 		if self.block_hotkeys:
 			return
 		self.animation["properties"]["selected_frame"]	= self.get_prev()
 		self.render(True)
 	
+	# jump to previous keyframe in layer
 	def playback_next(self,event=None):
 		if self.block_hotkeys:
 			return
 		self.animation["properties"]["selected_frame"]	= self.get_next()
 		self.render(True)
 	
+	### OTHER MENU ITEMS
+	
+	# open GitHub repo
 	def other_about(self,event=None):
 		return webbrowser_open(URL, new=0, autoraise=True)
 
+	# open GitHub repo's issues with predefined message
 	def other_issue(self,event=None):
 		return webbrowser_open(f'{URL}/issues/new?body=Verzió:%20{VERSION}%0A%0AHiba%20leírása:', new=0, autoraise=True)
 
-	### MOUSE EVENTS
+	##### MOUSE EVENTS
+	### CURSORS
+	# try to change cursor (exception can rise if cursor is unavailable in current system)
 	def cursor(self,type=""):
 		if not self.is_loading:
 			try:
 				self.root.config(cursor=type)
 			except:
 				pass
-		
+	
+	# change to drawing cursor when entering drawing area (does not disturb line or rectangle drawing process)
 	def mouse_to_hand(self, event):
 		self.cursor("hand2")
 		if self.is_playing or self.is_loading:
@@ -1289,6 +1361,7 @@ class Application(tk.Frame):
 		self.is_m3_down	= False
 		self.changes_draw = False
 	
+	# change to default cursor after leaving drawing area (line, rectangle and pencil tools handle it as a key release)
 	def mouse_to_default(self, event):
 		self.cursor("")
 		if self.is_playing or self.is_loading:
@@ -1310,6 +1383,8 @@ class Application(tk.Frame):
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
 	
+	### TOOLBAR
+	# select layers
 	def mouse_click_layers(self,event):
 		if self.is_loading:
 			return
@@ -1324,7 +1399,8 @@ class Application(tk.Frame):
 				return
 			self.render_editor(True)
 			self.render_preview(True)
-		
+	
+	# select layers and current frame
 	def mouse_click_frames(self,event):
 		if self.is_loading:
 			return
@@ -1341,7 +1417,8 @@ class Application(tk.Frame):
 		self.render_frames(False)
 		self.render_editor(True)
 		self.render_preview(True)
-		
+	
+	# right click on layers will select clicked layer and popup playback functions	
 	def mouse_popup_layers(self, event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1351,6 +1428,7 @@ class Application(tk.Frame):
 		finally:
 			self.playback_menu.grab_release()
 	
+	# right click on frames will select click layer and frame and popup edit functions
 	def mouse_popup_frames(self, event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1360,6 +1438,7 @@ class Application(tk.Frame):
 		finally:
 			self.edit_menu.grab_release()
 	
+	# mouse wheel scrolls frames over frames (re-renders visible frames afterwards)
 	def mouse_wheel_frames(self,event):
 		value		= int(event.delta/120) # Windows needs /120
 		if self.timeline_scrollbar_h.get()[0]>0 or value>0:
@@ -1368,6 +1447,8 @@ class Application(tk.Frame):
 			self.timeline_frames.xview_moveto(0)
 		self.render_frames(True)
 	
+	### STAGE
+	# click on stage (information required by tools)
 	def mouse_click_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1376,6 +1457,7 @@ class Application(tk.Frame):
 		self.start_y	= None
 		self.mouse_move_stage(event)
 	
+	# right click on stage (information required by tools)
 	def mouse_popup_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1384,6 +1466,7 @@ class Application(tk.Frame):
 		self.start_y	= None
 		self.mouse_move_stage(event)
 	
+	# mouse released over stage (line, rectangle are drawn, pencil tool adds drawing event to history)
 	def mouse_release_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1401,6 +1484,7 @@ class Application(tk.Frame):
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
 	
+	# mouse movement over stage (calculates x,y as pixel positions, handles most drawing processes)
 	def mouse_move_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1437,6 +1521,20 @@ class Application(tk.Frame):
 			elif self.tool=="zoom":
 				self.zoom(self.is_m1_down)
 	
+	# mouse wheel over stage & preview changes active color
+	def mouse_wheel_stage(self,event):
+		if event.delta>0:
+			self.color+=1
+			if self.color>=len(self.animation["stage"]["palette"]):
+				self.color=0
+		else:
+			self.color-=1
+			if self.color<0:
+				self.color	= len(self.animation["stage"]["palette"])-1
+		self.button_colorpicker(self.color)
+		
+	### PREVIEW
+	# click on preview (information required by tools)
 	def mouse_click_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1445,6 +1543,7 @@ class Application(tk.Frame):
 		self.start_y	= None
 		self.mouse_move_preview(event)
 	
+	# right click on stage (information required by tools)
 	def mouse_popup_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1453,6 +1552,7 @@ class Application(tk.Frame):
 		self.start_y	= None
 		self.mouse_move_preview(event)
 	
+	# mouse released over preview (line, rectangle are drawn, pencil tool adds drawing event to history)
 	def mouse_release_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1469,7 +1569,8 @@ class Application(tk.Frame):
 		self.render_preview(self.changes_draw)
 		self.changes_made=self.changes_made or self.changes_draw
 		self.changes_draw = False
-		
+	
+	# mouse movement over preview (calculates x,y as pixel positions, handles most drawing processes)	
 	def mouse_move_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
@@ -1505,18 +1606,10 @@ class Application(tk.Frame):
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.picker(x,y,False)
 	
-	def mouse_wheel_stage(self,event):
-		if event.delta>0:
-			self.color+=1
-			if self.color>=len(self.animation["stage"]["palette"]):
-				self.color=0
-		else:
-			self.color-=1
-			if self.color<0:
-				self.color	= len(self.animation["stage"]["palette"])-1
-		self.button_colorpicker(self.color)
+	##### DRAWING
+	### FRAME FUNCTIONS
 	
-	### DRAWING
+	# insert a frame at position (extend preceeding frame up to this point)
 	def insert_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		if position<len(layer["frames"]):
@@ -1539,6 +1632,7 @@ class Application(tk.Frame):
 			else:	
 				layer["frames"].append({"type":"empty","data":{}})
 	
+	# insert given frame after position
 	def insert_frame_extra(self,position,extra):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		self.extend_frame(position)
@@ -1547,6 +1641,7 @@ class Application(tk.Frame):
 		self.insert_frame(position)
 		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
 
+	# overwrite to given frame at position 
 	def overwrite_frame(self,position,extra):
 		if position:
 			self.insert_frame_extra(position,extra)
@@ -1555,7 +1650,8 @@ class Application(tk.Frame):
 				self.animation["properties"]["selected_frame"]+=1
 		else:
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][position]=deepcopy(extra)
-				
+	
+	# remove frame at position
 	def remove_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		if position<len(layer["frames"]):
@@ -1582,6 +1678,7 @@ class Application(tk.Frame):
 				self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= new_frames
 			self.animation["properties"]["selected_frame"]	= max(0,self.animation["properties"]["selected_frame"]-1)
 	
+	# extend length of frame at position/until position if it's outside the curernt boundaries
 	def extend_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		frames	= layer["frames"]
@@ -1603,6 +1700,7 @@ class Application(tk.Frame):
 			new_frames.append(frame)
 		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= new_frames			
 	
+	# reduce length of frame if it's not just a single keyframe
 	def reduce_frame(self,position):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		frames	= layer["frames"]
@@ -1625,6 +1723,7 @@ class Application(tk.Frame):
 			new_frames.append(frame)
 		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"]	= new_frames			
 	
+	# get currently visible frame (for altering or just viewing)
 	def get_frame(self,view=None):
 		if view is None:
 			# get a deep copy of the selected frame for editing
@@ -1646,6 +1745,7 @@ class Application(tk.Frame):
 					return {},select	# error
 			return view["frames"][select]["data"], select
 	
+	# get next keyframe in layer
 	def get_next(self):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		for select in range(self.animation["properties"]["selected_frame"]+1,len(layer["frames"])):
@@ -1653,6 +1753,7 @@ class Application(tk.Frame):
 				return select
 		return len(layer["frames"])
 	
+	# get previous keyframe in layer
 	def get_prev(self):
 		layer	= self.animation["timeline"][self.animation["properties"]["selected_layer"]]
 		select	= max(0,min(self.animation["properties"]["selected_frame"]-1,len(layer["frames"])-1))
@@ -1660,6 +1761,9 @@ class Application(tk.Frame):
 			select	= layer["frames"][select]["data"]
 		return select
 	
+	### TOOLS
+	
+	# change stage's zoom level
 	def zoom(self,inc=True):
 		self.is_m1_down	= False
 		self.is_m3_down	= False
@@ -1670,6 +1774,7 @@ class Application(tk.Frame):
 		self.render_editor(True)
 		self.cursor("hand2")
 	
+	# select color from selected layer's current frame on stage / visible pixel in window on preview
 	def picker(self,x,y,is_editor=True):
 		if is_editor:
 			frame, select= self.get_frame(self.animation["timeline"][self.animation["properties"]["selected_layer"]])
@@ -1686,6 +1791,7 @@ class Application(tk.Frame):
 		self.is_m3_down	= False
 		self.changes_draw= False
 	
+	# pencil tool (uses helper function to quickly render scribbles without actually rerendering the stage)
 	def pencil(self,x,y,add=True,is_editor=True):
 		if add:
 			color		= self.animation["stage"]["palette"][self.color]
@@ -1711,55 +1817,8 @@ class Application(tk.Frame):
 			self.render_editor_helper(x,y,color)
 		else:
 			self.render_preview_helper(x,y,color)
-		
-	def move(self,x_delta=0,y_delta=0):
-		frame, select= self.get_frame()
-		new_frame	= {}
-		for x in frame:
-			new_frame[(x+x_delta)]={}
-			for y in frame[x]:
-				new_frame[(x+x_delta)][(y+y_delta)]=frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
-		self.edit_history_add("elmozdítás")
-		self.render(True)
-	
-	def flip(self,horizontal=True,render_flip=True):
-		frame, select= self.get_frame()
-		if horizontal:
-			x_offset	= int(self.animation["stage"]["width"])-1
-			x_delta		= -1
-			y_offset	= 0
-			y_delta		= 1
-		else:
-			x_offset	= 0
-			x_delta		= 1
-			y_offset	= int(self.animation["stage"]["height"])-1
-			y_delta		= -1
-		new_frame	= {}
-		for x in frame:
-			new_frame[(x*x_delta+x_offset)]={}
-			for y in frame[x]:
-				new_frame[(x*x_delta+x_offset)][(y*y_delta+y_offset)]=frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
-		if render_flip:
-			self.render(True)
-			self.edit_history_add("tükrözés")
-	
-	def rotate(self,right=True):
-		frame, select= self.get_frame()
-		transpose	= {}	
-		for x in frame:
-			for y in frame[x]:
-				if y not in transpose:
-					transpose[y]	= {}
-				transpose[y][x]	= frame[x][y]
-		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(transpose)
-		self.flip(right,False)
-		if right:
-			self.move(-self.animation["stage"]["width"],0)
-		else:
-			self.move(0,-self.animation["stage"]["height"])
-	
+
+	# draw line based on Bresenham’s algorithm (can render without actually altering the frame's contents)
 	def line(self,x,y,add=True,is_editor=True,hint=True):
 		if hint:
 			if self.start_x is None:
@@ -1831,6 +1890,7 @@ class Application(tk.Frame):
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame
 			self.edit_history_add("vonal eszköz")
 	
+	# draw rectangle (can render without actually altering the frame's contents)
 	def rectangle(self,x,y,add=True,is_editor=True,hint=True):
 		if hint:
 			if self.start_x is None:
@@ -1882,6 +1942,7 @@ class Application(tk.Frame):
 			self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = frame	 
 			self.edit_history_add("négyszög eszköz")
 	
+	# flood fill (uses helper first to determine if fill is possible, alters frame afterwards)
 	def fill(self,x,y,add=True,is_editor=True):
 		self.is_m1_down = False
 		self.is_m3_down = False
@@ -1921,10 +1982,11 @@ class Application(tk.Frame):
 			self.loading(False)
 		self.cursor("hand2")
 	
-	# based on https://stackoverflow.com/questions/19839947/flood-fill-in-python
+	# flood fill helper that checks if selected shape is not closed
 	def fill_flood(self,frame,x,y,min_x,max_x,min_y,max_y,original,replace):
 		if self.fill_break:
 			return deepcopy(frame)
+		# based on https://stackoverflow.com/questions/19839947/flood-fill-in-python
 		if original=="":
 			if x<min_x or x>=max_x or y<min_y or y>=max_y:
 				self.fill_break=True
@@ -1947,7 +2009,63 @@ class Application(tk.Frame):
 			if x in frame and not frame[x]:
 				del frame[x]
 		return deepcopy(frame)
+		
+	### TRANSFORM PIXEL DRAWINGS
 	
+	# move all pixels in active frame
+	def move(self,x_delta=0,y_delta=0):
+		frame, select= self.get_frame()
+		new_frame	= {}
+		for x in frame:
+			new_frame[(x+x_delta)]={}
+			for y in frame[x]:
+				new_frame[(x+x_delta)][(y+y_delta)]=frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
+		self.edit_history_add("elmozdítás")
+		self.render(True)
+	
+	# flip all pixels in active frame
+	def flip(self,horizontal=True,render_flip=True):
+		frame, select= self.get_frame()
+		if horizontal:
+			x_offset	= int(self.animation["stage"]["width"])-1
+			x_delta		= -1
+			y_offset	= 0
+			y_delta		= 1
+		else:
+			x_offset	= 0
+			x_delta		= 1
+			y_offset	= int(self.animation["stage"]["height"])-1
+			y_delta		= -1
+		new_frame	= {}
+		for x in frame:
+			new_frame[(x*x_delta+x_offset)]={}
+			for y in frame[x]:
+				new_frame[(x*x_delta+x_offset)][(y*y_delta+y_offset)]=frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(new_frame)
+		if render_flip:
+			self.render(True)
+			self.edit_history_add("tükrözés")
+	
+	# rotate all pixels in active frame (transpose, flip and move)
+	def rotate(self,right=True):
+		frame, select= self.get_frame()
+		transpose	= {}	
+		for x in frame:
+			for y in frame[x]:
+				if y not in transpose:
+					transpose[y]	= {}
+				transpose[y][x]	= frame[x][y]
+		self.animation["timeline"][self.animation["properties"]["selected_layer"]]["frames"][select]["data"] = deepcopy(transpose)
+		self.flip(right,False)
+		if right:
+			self.move(-self.animation["stage"]["width"],0)
+		else:
+			self.move(0,-self.animation["stage"]["height"])
+	
+	### TOOL BUTTONS
+	
+	# select tool
 	def button_tool(self,parameter):
 		if parameter in LAYOUT[self.skin]["tools"]:
 			self.tool	= parameter
@@ -1958,6 +2076,7 @@ class Application(tk.Frame):
 			if parameter+"-active" in self.images:
 				self.stage_tools_buttons[parameter].configure(image=self.images[parameter+"-active"])
 	
+	# select or change color (-1 is the selected color button, rest are palette indexes)
 	def button_colorpicker(self,i):
 		if i>=0 and i<len(self.animation["stage"]["palette"]):
 			self.color	= i
@@ -1974,13 +2093,15 @@ class Application(tk.Frame):
 		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
 		self.edit_history_add("színkeverés")
 
-	### OTHER 
+	##### MISC FUNCITONS
+	# length of animation
 	def animation_length(self):
 		max_frames	= 0
 		for layer in self.animation["timeline"]:
 			max_frames		= max(max_frames,len(layer["frames"]))
 		return max_frames
 	
+	# render color picker buttons based on updated palette
 	def refresh_colorpicker(self):
 		for i, color in enumerate(self.animation["stage"]["palette"]):
 			self.stage_colorpicker_buttons[i+1].configure(bg=color,highlightcolor=color,highlightbackground=color,fg=color,activebackground=color,activeforeground=color)
@@ -1990,12 +2111,14 @@ class Application(tk.Frame):
 		self.stage_colorpicker_buttons[0].configure(bg=self.animation["stage"]["palette"][self.color],highlightcolor=self.animation["stage"]["palette"][self.color],highlightbackground=self.animation["stage"]["palette"][self.color],fg=self.animation["stage"]["palette"][self.color],activebackground=self.animation["stage"]["palette"][self.color],activeforeground=self.animation["stage"]["palette"][self.color])
 		self.stage_colorpicker_buttons[(self.color+1)].configure(image=self.images["palette-active"])	
 	
+	# change active layer with tab key
 	def change_layer(self,event=None):
 		if self.block_hotkeys:
 			return	
 		self.animation["properties"]["selected_layer"] = (self.animation["properties"]["selected_layer"]+1)%len(self.animation["timeline"])
 		self.render(True)
 	
+	# window resize function that lags so information passed is usually inaccurate
 	def on_resize(self,event):
 		try:
 			self.root.update()
@@ -2018,6 +2141,7 @@ class Application(tk.Frame):
 		except:
 			pass
 	
+	# window focus gained (check if clipboard contents have been altered since)
 	def on_focus(self,event=None):
 		try:
 			clipboard	= json.loads(self.root.clipboard_get())
@@ -2028,6 +2152,7 @@ class Application(tk.Frame):
 			self.edit_menu.entryconfigure(5, state=tk.DISABLED)
 			self.edit_menu.entryconfigure(6, state=tk.DISABLED)
 	
+	# play or stop audio
 	def music(self,play=True):
 		if self.audio is not None:
 			if play:
@@ -2035,6 +2160,7 @@ class Application(tk.Frame):
 			else:
 				self.audio.stop()
 	
+	# load audio file, alert if file is not found or VLC is unavailable
 	def music_load(self):
 		self.audio		= None	
 		if self.animation["properties"]["music"]:
@@ -2058,6 +2184,7 @@ class Application(tk.Frame):
 					messagebox.showwarning("A VLC nem elérhető","A lejátszás alatt nem lesz az animációknak hangja ezen a számítógépen.")
 			self.properties_menu.entryconfigure(3, label="Zene betöltése")
 	
+	# disable certain functions while loading, and change cursor if wait cursor is available in system
 	def loading(self,update=True):
 		self.is_loading		= update
 		if self.is_loading:
@@ -2070,6 +2197,7 @@ class Application(tk.Frame):
 			self.root.config(cursor="")
 			self.root.update()
 	
+	# show progress bar window where percentage 0-99 updates the progress bar, percentage 100 will destroy the window
 	def loading_progress(self,percentage=0):
 		if not self.progress_window:
 			self.progress_window= tk.Toplevel(self.root)
@@ -2086,6 +2214,7 @@ class Application(tk.Frame):
 			self.progress_bar["value"] = min(99,max(0,percentage))
 			#self.properties_window.protocol("WM_DELETE_WINDOW", lambda event:pass)
 	
+	# show error window and log error message and raise it again if it the error was raised by an exception
 	def error(self,message="Ismeretlen hiba",e=None):					
 		self.loading(False)
 		messagebox.showerror(message, str(e))
@@ -2096,15 +2225,19 @@ class Application(tk.Frame):
 			pass
 		return
 	
+	# log message with timestamp
 	def log(self,message=""):
 		print(time.strftime("%H:%M:%S")+" > "+message,flush=True)
 	
+	# enable async running of async functions
 	def async_run(self,func):
 		try:
 			threading.Thread(target=lambda:self.loop.run_until_complete(func)).start()
 		except RuntimeError as e:
 			pass
 	
+	# play animation
+	# NOTE: THIS ISN'T ASYNC, IT WAS UPDATED TO BE SYNC TO IMPROVE PERFORMANCE
 	def async_play(self,from_start=False):
 		timestamp	= time.time()
 		length		= self.animation_length()
@@ -2149,6 +2282,7 @@ class Application(tk.Frame):
 			time.sleep(int(speed/20))
 			#await asyncio.sleep(int(speed/20))
 
+	# async render resized window after window properties are most likely up to date
 	async def async_render(self,event=None):
 		try:
 			await asyncio.sleep(.5)
@@ -2157,6 +2291,7 @@ class Application(tk.Frame):
 			pass
 		self.resize	= False
 	
+	# import *.qp4 file (async but blocks altering most parts of the animation)
 	async def async_import(self,file):
 		self.loading(True)
 		with codecs.open(file,"r",encoding="utf-8") as f:
@@ -2198,6 +2333,7 @@ class Application(tk.Frame):
 		self.loading_progress(100)
 		self.loading(False)
 	
+	# export *.qp4 file (async but blocks altering most parts of the animation)
 	async def async_export(self,file):
 		if self.is_loading:
 			return
@@ -2255,6 +2391,7 @@ class Application(tk.Frame):
 		self.loading(False)
 
 if __name__ == "__main__":
+	# if editor is started from command line, note the user not to close it
 	print("Ha ezt az ablakot bezárod, az alkalmazás is bezáródik!")
 	app		= Application(master=tk.Tk())
 	app.mainloop()

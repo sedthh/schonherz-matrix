@@ -292,6 +292,7 @@ class Application(tk.Frame):
 			self.create_stage()
 		except Exception as e:
 			self.error("Nem sikerült létrehozni a menüelemeket!",e)
+		self.render(True)
 		
 		# finishing window configuration
 		self.edit_history_clear()
@@ -300,7 +301,6 @@ class Application(tk.Frame):
 		self.root.call('wm', 'iconphoto', self.root._w, self.images["icon"]) 
 		self.on_focus()
 		self.music_load()
-		self.render(True)
 	
 	# generate required object for animation data
 	def new_animation(self):

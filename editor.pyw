@@ -576,7 +576,7 @@ class Application(tk.Frame):
 			for j in range(len(self.animation["timeline"])):
 				workaround	= self.animation["timeline"][j]["frames"][min(visible_min_i,len(self.animation["timeline"][j]["frames"])-1)]["type"]
 				if workaround=="link":
-					workaround	= self.animation["timeline"][j]["frames"][self.animation["timeline"][j]["frames"][visible_min_i]["data"]]["type"]
+					workaround	= self.animation["timeline"][j]["frames"][self.animation["timeline"][j]["frames"][min(visible_min_i,len(self.animation["timeline"][j]["frames"])-1)]["data"]]["type"]
 				if workaround=="empty":		
 					color		= LAYOUT[self.skin]["frame-empty"]
 				else:
@@ -591,6 +591,8 @@ class Application(tk.Frame):
 							if cache_frame:
 								if i*width>visible_min and ((i-cache_frame)*width+1)<visible_max:
 									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+									if i>visible_max_i:
+										break
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-empty"]
 							stipple	= ""
@@ -599,6 +601,8 @@ class Application(tk.Frame):
 							if cache_frame:	
 								if i*width>visible_min and ((i-cache_frame)*width+1)<visible_max:
 									self.timeline_frames.create_rectangle(max(visible_min,(i-cache_frame)*width+1), offset+j*height+1, min(visible_max,i*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
+									if i>visible_max_i:
+										break
 								cache_frame=0
 							color	= LAYOUT[self.skin]["frame-matrix"]
 							stipple	= ""
@@ -612,11 +616,15 @@ class Application(tk.Frame):
 						if not cache_frame:
 							if (i+1)*width>visible_min and i*width<visible_max:	
 								self.timeline_frames.create_rectangle(i*width+1, offset+j*height+1, (i+1)*width, offset+(j+1)*height, fill=color, stipple=stipple, outline=color)
+								if i>visible_max_i:
+									break
 					else:
 						#color	= ""
 						stipple	= "gray50"
 						if i==len(self.animation["timeline"][j]["frames"]):
 							self.timeline_frames.create_line(i*width+1, offset+j*height+1, i*width+1, offset+(j+1)*height, fill=outline)
+							if i>visible_max_i:
+								break
 						outline	= LAYOUT[self.skin]["frame-color"]	
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:

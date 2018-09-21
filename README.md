@@ -12,7 +12,7 @@ A **QPY** egy LED fal animáció szerkesztő alkalmazás, amely a [Schönherz QP
 	
 ## Installálás
 
-Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip)** és csomagold ki a **qpy.zip** fájlt. A mappában lévő **editor.exe** megnyitásával indul a szerkesztő.
+Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip)** és csomagold ki a **qpy.zip** fájlt. A benne lévő **editor.exe** megnyitásával indul a szerkesztő.
 
 **VAGY** 
 
@@ -23,7 +23,7 @@ Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzió
 > pip3 install python-vlc
 ```
 
-Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban. 
+Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban (vagy ha nálad a GUI köszönő viszonyban sincs azzal, ahogy ki kellene néznie). 
 
 A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
 
@@ -65,24 +65,22 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 
 ## FAQ
 
-- A gyakori mentés ajánlott! Amennyiben valamiért túlságosan lassúvá válik az alkalmazás (~1000 képkocka fölött) és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és vágd össze őket. A kiexportált animációk újra ugyanúgy beimportálhatóak. 
+- Amennyiben valamiért túlságosan lassúvá válik az alkalmazás (~500 képkocka fölött) és csak rövidebb animációkat tudsz vele létrehozni a gépeden, exportáld ki a rövidebb animációkat és utólag vágd össze őket. A kiexportált animációk újra ugyanúgy beimportálhatóak. 
 
-- Manuálisan összevágni a kiexportált részeket LUA kódként a régi *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztővel is lehet. Szóval ha valami nagyon nem megy, még mindig tudjátok a régi szerkesztőt használni.
+- Manuálisan összevágni a kiexportált részeket LUA kódként a régi *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztővel is lehet. Szóval ha valami nagyon nem megy, még mindig tudjátok a régi szerkesztőben használni az elkészült részeket.
 
 - A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 
-- Lejátszás alatt csak az előnézeti ablak frissül, ezzel minimalizálva a kirajzolás okozta laget. Ilyenkor a Schönherz képe sem látszódik.
+- Lejátszás alatt csak az előnézeti ablak frissül, ezzel minimalizálva a kirajzolás okozta laget. Ilyenkor a Schönherz képe sem látszódik. Ha ki is maradnak néha visszajátszáskor képkockák, a valóságban még ugyanúgy le fognak majd játszódni.
 
 - Kirajzoláskor mindig időben a legutolsó képkocka fog látszódni, egészen addig, amíg nem jön időben egy újabb képkocka.
 
 - Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
 
-- A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja.
+- A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja. Néha kicsit várni kell, mire elindul a zene lejátszása, de időben hozzáigazítja magát az aktuális képkockákhoz.
 
 - Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra. Ugyanaz a python kód van futtatható exe fájlként a könyvtáraival becsomagolva, amit a GIT repoban is látsz. 
 
-- A forráskódon szépíteni fogunk, egyelőre az volt a cél, hogy be legyen időre fejezve és fusson.
-
-- Két fajta lejátszás létezik: lejátszás innen (space) és lejátszás az elejétől (enter) amelyek máshonnan indítják a lejátszást és megálláskor máshova ugranak vissza a szerkesztőben. A piros lejátszó gomb az aktuális pozíciótól kezd el játszani.
+- Két fajta lejátszás létezik: lejátszás innen (space) és lejátszás az elejétől (enter) amelyek máshonnan indítják a lejátszást és megálláskor máshova ugranak vissza a szerkesztőben. A piros lejátszó gomb az aktuális pozíciótól kezd el játszani. A visszatekerő gombbal léphetsz az animáció elejére.
 
 - A tulajdonságok menüben a "Színpad nyújtása" kiválasztásával vagy a 0 gombbal lehet a szerkesztőfelület pixeleinek arányát változtatni, hogy jobban hasonlítson a végeredményre a Schönherz falán. 

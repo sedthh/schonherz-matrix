@@ -31,7 +31,7 @@ from tkinter.ttk import Progressbar
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.5 alfa"					# version number
+VERSION		= "0.1.6 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
@@ -789,7 +789,8 @@ class Application(tk.Frame):
 	
 	# mark a frame on timeline after copy/cut
 	def render_frames_mark(self):
-		self.timeline_frames.delete(self.frame_marker)
+		if self.frame_marker:
+			self.timeline_frames.delete(self.frame_marker)
 		offset 			= LAYOUT[self.skin]["layer-offset"]-1
 		width			= LAYOUT[self.skin]["frame-width"]
 		height			= LAYOUT[self.skin]["layer-height"]

@@ -21,14 +21,9 @@ Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
 - Lasszó eszköz a képkocka részeinek kijelöléséhez és kivágás/másolás/beillesztéséhez.
 - Szöveg hozzáadás és betütípusok kiválasztása.
 - Képek importálása és különbözõ konvertálási/átméretezési módok lehetõvé tétele.
-- Egyéb, külsõ formátumok lekezelése vágólapról való beillesztésnél.
 - Transition animációs funkció képkockák között. 
-- Régi animációk importálásának lehetõsége.
-- Összefûzési lehetõség más animációk egymásba importálásával.
 - Elõnézetnél a színprofilok figyelembe vétele és a valóságban elérhetõ LED színek szimulációja. 
 - Elõnézetnél a LED falak hibáinak és zajának szimulálása.
 - Shadow frame (elõzõ képkocka félig átlátszón való) megjelenítése az animáció megkönnyítéséhez.
-- Vonalzó eszköz hozzáadása / grid a színpadon.
-- Folyamatjelzõ progress bar exportáláshoz.
 
 Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 

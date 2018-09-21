@@ -99,6 +99,7 @@ LAYOUT		= {
 		"frame-empty"		: "#ffffff",
 		"frame-matrix"		: "#aaaaaa",
 		"frame-border"		: "#666666",
+		"frame-marker"		: "#0000aa",
 		"tools"				: ["pencil","line","rectangle","fill","picker","zoom"],
 		"palette-length"	: 20,
 		"palette-width"		: 20,
@@ -261,6 +262,7 @@ class Application(tk.Frame):
 		self.progress_window= False
 		self.progress_bar	= False
 		self.warned_about_vlc=False
+		self.frame_marker	= None
 
 		# images
 		self.path			= os.path.dirname(os.path.realpath(__file__))	
@@ -641,7 +643,10 @@ class Application(tk.Frame):
 						self.timeline_frames.create_rectangle(max(visible_min,(len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1), offset+j*height+1, min(visible_max,len(self.animation["timeline"][j]["frames"])*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 					cache_frame=0				
 			self.timeline_frames.create_line(max(visible_min,0), offset, min(visible_max,(max(max_width,max_frames*width)+1)*width+1), offset, fill=LAYOUT[self.skin]["layer-color"])
-		try:
+			if self.frame_marker:
+				self.timeline_frames.delete(self.frame_marker)
+				self.frame_marker	= None
+		try:			
 			self.timeline_frames.delete(self.timeline_frames_select)
 			self.timeline_frames.delete(self.timeline_frames_select_line)
 			self.timeline_frames.delete(self.timeline_frames_select_frame)
@@ -781,6 +786,15 @@ class Application(tk.Frame):
 		px		= int(offset_x+x*self.animation["stage"]["size_x"]+int(x/self.animation["stage"]["skip_x"])*self.animation["stage"]["pad_x"])
 		py		= int(offset_y+y*self.animation["stage"]["size_y"]+int(y/self.animation["stage"]["skip_y"])*self.animation["stage"]["pad_y"])
 		self.stage_preview.create_rectangle(px,py,px+self.animation["stage"]["size_x"],py+self.animation["stage"]["size_y"],fill=color,outline="")
+	
+	# mark a frame on timeline after copy/cut
+	def render_frames_mark(self):
+		self.timeline_frames.delete(self.frame_marker)
+		offset 			= LAYOUT[self.skin]["layer-offset"]-1
+		width			= LAYOUT[self.skin]["frame-width"]
+		height			= LAYOUT[self.skin]["layer-height"]
+		top				= self.animation["properties"]["selected_layer"]*height+offset
+		self.frame_marker= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, top, (self.animation["properties"]["selected_frame"]+1)*width-1, top+height, outline="", fill=LAYOUT[self.skin]["frame-marker"], stipple="gray50")
 	
 	# call most common render functions at once
 	def render(self,redraw=False):
@@ -1058,6 +1072,7 @@ class Application(tk.Frame):
 		self.root.clipboard_append(json.dumps(data))
 		self.edit_menu.entryconfigure(5, state=tk.NORMAL)
 		self.edit_menu.entryconfigure(6, state=tk.NORMAL)
+		self.render_frames_mark()
 	
 	# copy frame	
 	def edit_copy(self,event=None):
@@ -1074,6 +1089,7 @@ class Application(tk.Frame):
 		self.root.clipboard_append(json.dumps(data))
 		self.edit_menu.entryconfigure(5, state=tk.NORMAL)
 		self.edit_menu.entryconfigure(6, state=tk.NORMAL)
+		self.render_frames_mark()
 	
 	# paste frame (overwrite)
 	def edit_paste(self,event=None):

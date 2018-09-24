@@ -31,7 +31,7 @@ from tkinter.ttk import Progressbar
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.6 alfa"					# version number
+VERSION		= "0.1.7 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
 PROFILES	= {	
 	"SCH"		: {	# default display profile for Schönherz Matrix
@@ -263,6 +263,7 @@ class Application(tk.Frame):
 		self.progress_bar	= False
 		self.warned_about_vlc=False
 		self.frame_marker	= None
+		self.timeline_layer_list= []
 
 		# images
 		self.path			= os.path.dirname(os.path.realpath(__file__))	
@@ -403,14 +404,18 @@ class Application(tk.Frame):
 		self.transform_menu.add_command(label = "Elforgatás balra 90 fokkal", command = self.transform_rotate_left)
 		self.transform_menu.add_command(label = "Vízszintes tükrözés", command = self.transform_flip_horizontal)
 		self.transform_menu.add_command(label = "Függőleges tükrözés", command = self.transform_flip_vertical)
-		self.transform_menu.add_command(label = "Elmozgatás felfelé", command = self.transform_move_up, underline=1,accelerator="Up")
+		self.transform_menu.add_command(label = "Elmozgatás felfelé", command = self.transform_move_up, underline=1,accelerator="(Shift) Up")
 		self.root.bind_all("<Up>", self.transform_move_up)
-		self.transform_menu.add_command(label = "Elmozgatás lefelé", command = self.transform_move_down,underline=1,accelerator="Down")
+		self.root.bind_all("<Shift-Up>", lambda event:self.transform_move_up(event,True))
+		self.transform_menu.add_command(label = "Elmozgatás lefelé", command = self.transform_move_down,underline=1,accelerator="(Shift) Down")
 		self.root.bind_all("<Down>", self.transform_move_down)
-		self.transform_menu.add_command(label = "Elmozgatás balra", command = self.transform_move_left,underline=1,accelerator="Left")
+		self.root.bind_all("<Shift-Down>", lambda event:self.transform_move_down(event,True))
+		self.transform_menu.add_command(label = "Elmozgatás balra", command = self.transform_move_left,underline=1,accelerator="(Shift) Left")
 		self.root.bind_all("<Left>", self.transform_move_left)
-		self.transform_menu.add_command(label = "Elmozgatás jobbra", command = self.transform_move_right,underline=1,accelerator="Right")
+		self.root.bind_all("<Shift-Left>", lambda event:self.transform_move_left(event,True))
+		self.transform_menu.add_command(label = "Elmozgatás jobbra", command = self.transform_move_right,underline=1,accelerator="(Shift) Right")
 		self.root.bind_all("<Right>", self.transform_move_right)
+		self.root.bind_all("<Shift-Right>", lambda event:self.transform_move_right(event,True))
 		
 		self.playback_menu	= tk.Menu(self.menubar, tearoff=0)
 		self.playback_menu.add_command(label = "Lejátszás innen", command = self.playback_toggle, underline=1,accelerator="Space")
@@ -548,18 +553,19 @@ class Application(tk.Frame):
 		height 			= LAYOUT[self.skin]["layer-height"]-1
 		width			= LAYOUT[self.skin]["layer-width"]-1
 		if redraw:
-			self.timeline_layers.delete("all")			
+			self.timeline_layers.delete("all")
+			self.timeline_layers_list = []
 			for i, layer in enumerate(self.animation["timeline"]):
-				self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer"], outline=LAYOUT[self.skin]["layer-outline"])
+				self.timeline_layers_list.append(self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer"], outline=LAYOUT[self.skin]["layer-outline"]))
 				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
 				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
 				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=layer["name"],anchor="w")
 			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
-		try:
-			self.timeline_layers.delete(self.timeline_layers_select)
-		except:
-			pass
-		self.timeline_layers_select	= self.timeline_layers.create_rectangle(1, offset+self.animation["properties"]["selected_layer"]*height+1, width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height-1, fill=LAYOUT[self.skin]["layer-active"], outline="", stipple="gray50")
+		for i,layer in enumerate(self.timeline_layers_list):
+			if i==self.animation["properties"]["selected_layer"]:
+				self.timeline_layers.itemconfig(layer,fill=LAYOUT[self.skin]["layer-active"])
+			else:
+				self.timeline_layers.itemconfig(layer,fill=LAYOUT[self.skin]["layer"])
 
 	# render visible frames, frame timing & frame select
 	def render_frames(self,redraw=False):
@@ -680,7 +686,7 @@ class Application(tk.Frame):
 							self.stage_editor.create_rectangle(left+size_x*x, top+size_y*y, left+size_x*(x+1), top+size_y*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])
 				self.stage_editor.create_line(left+int(p_width*size_x/2),top,left+int(p_width*size_x/2),top+p_height*size_y,fill=self.animation["stage"]["border-color"],width=2)
 				self.stage_editor.create_line(left,top+int(p_height*size_y/2),left+p_width*size_x,top+int(p_height*size_y/2),fill=self.animation["stage"]["border-color"],width=2)
-						
+			
 			min_x, min_y, max_x, max_y 	= 0, 0, p_width, p_height
 			self.render_cache			= {}
 			for i, layer in enumerate(reversed(self.animation["timeline"])):
@@ -719,7 +725,9 @@ class Application(tk.Frame):
 						else:
 							layer["frames"][select]["type"]="matrix"		
 			if not play:
-				self.stage_editor.configure(scrollregion=((min_x+1)*size_x,(min_y+1)*size_y,(max(p_width,max_x-min_x)+1)*size_x,(max(p_height,max_y-min_y)+1)*size_y))
+				x_scroll	= max((min_x+1)*size_x,(max(p_width,max_x-min_x)+1)*size_x)
+				y_scroll	= max((min_y+1)*size_y,(max(p_height,max_y-min_y)+1)*size_y)
+				self.stage_editor.configure(scrollregion=(-x_scroll/2,-y_scroll/2,x_scroll*2,y_scroll*2))
 	
 	# render preview window, timer and currently visible pixels that were calculated in "render_stage" function (based on visible frames in all layers)
 	def render_preview(self,redraw=False,play=False):
@@ -764,7 +772,7 @@ class Application(tk.Frame):
 			sec			= int(d-min*60)
 			timestamp	= str(min).zfill(2)+":"+str(sec).zfill(2)
 			self.stage_preview.itemconfig(self.timer,text=timestamp+" - "+self.duration)
-
+			
 	# quickly draw pixels on editor without much overhead (please call "render_stage" after)
 	def render_stage_helper(self,x,y,color):
 		size_x	= max(1,self.animation["properties"]["zoom"])
@@ -871,22 +879,7 @@ class Application(tk.Frame):
 					if data["version"][0]>self.version[0] or data["version"][1]>self.version[1] or data["version"][2]>self.version[2]:
 						# TODO: auto update
 						messagebox.showinfo("Eltérő verziók!", "Ez az animáció egy újabb verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
-					newdata				= deepcopy(data)
-					newdata["timeline"]	= []
-					for layer in data["timeline"]:
-						frames				= []
-						for frame in layer["frames"]:
-							if frame["data"] and isinstance(frame["data"],dict):
-								fix		= {}
-								for x in frame["data"]:
-									fix[int(x)]	= {}
-									for y in frame["data"][x]:
-										fix[int(x)][int(y)]	= frame["data"][x][y]
-								frame["data"]	= fix
-							frames.append(frame)
-						layer["frames"]	= frames
-						newdata["timeline"].append(layer)
-					self.animation		= newdata
+					self.animation		= self.json_fix(data)
 					### add variables for backward compatiblity
 					if "ratio" not in self.animation["stage"]:
 						self.animation["stage"]["ratio"]	= PROFILES["SCH"]["ratio"]
@@ -977,7 +970,7 @@ class Application(tk.Frame):
 		if self.history:		
 			if self.history_index>0:
 				self.history_index	-= 1
-				self.animation		= deepcopy(self.history[self.history_index]["data"])
+				self.animation		= self.json_fix(json.loads(self.history[self.history_index]["data"]))
 				self.edit_menu.entryconfigure(0, state=tk.NORMAL)
 				if self.history[self.history_index]["type"]:
 					self.edit_menu.entryconfigure(0, label="Visszavonás: "+self.history[self.history_index]["type"])
@@ -1007,7 +1000,7 @@ class Application(tk.Frame):
 				else:
 					self.edit_menu.entryconfigure(1, label="Újra")
 				self.history_index	+= 1
-				self.animation		= deepcopy(self.history[self.history_index]["data"])
+				self.animation		= self.json_fix(json.loads(self.history[self.history_index]["data"]))
 				self.edit_menu.entryconfigure(1, state=tk.NORMAL)
 			if self.history_index>=len(self.history)-1:
 				self.edit_menu.entryconfigure(1, state=tk.DISABLED)
@@ -1032,9 +1025,9 @@ class Application(tk.Frame):
 			self.history		= self.history[:self.history_index+1]
 			self.history.append({
 				"type": type,
-				"data": deepcopy(self.animation)
+				"data": json.dumps(self.animation)	# for some reason, this is faster than DEEPCOPY
 			})
-			self.history	= deepcopy(self.history[-(LAYOUT[self.skin]["history_size"]+1):])
+			self.history	= self.history[-(LAYOUT[self.skin]["history_size"]+1):]
 		self.history_index	= len(self.history)-1
 		if self.history:
 			self.edit_menu.entryconfigure(0, state=tk.NORMAL)
@@ -1270,20 +1263,20 @@ class Application(tk.Frame):
 		self.flip(False)
 	
 	# move all selected pixels one pixel up
-	def transform_move_up(self,event=None):
-		self.move(0,-1)
+	def transform_move_up(self,event=None,double=None):
+		self.move(0,-2 if double else -1)
 	
 	# move all selected pixels one pixeldown
-	def transform_move_down(self,event=None):
-		self.move(0,1)
+	def transform_move_down(self,event=None,double=None):
+		self.move(0,2 if double else 1)
 		
 	# move all selected pixels one pixel left
-	def transform_move_left(self,event=None):
-		self.move(-1,0)
+	def transform_move_left(self,event=None,double=None):
+		self.move(-2 if double else -1,0)
 		
 	# move all selected pixels one pixel right
-	def transform_move_right(self,event=None):
-		self.move(1,0)
+	def transform_move_right(self,event=None,double=None):
+		self.move(2 if double else 1,0)
 
 	### PLAYBACK FUNCTIONS	
 	
@@ -1948,8 +1941,10 @@ class Application(tk.Frame):
 		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
 		if x0>x1:
 			x0,x1=x1,x0
+		x1	+= 1
 		if y0>y1:
 			y0,y1=y1,y0
+		y1	+= 1
 		for _x in range(x0,x1):
 			for _y in range(y0,y1):
 				if hint:
@@ -2129,6 +2124,25 @@ class Application(tk.Frame):
 		self.edit_history_add("színkeverés")
 
 	##### MISC FUNCITONS
+	# JSON objects can't have int keys --> turn str keys into ints for frames
+	def json_fix(self,data):
+		newdata				= deepcopy(data)
+		newdata["timeline"]	= []
+		for layer in data["timeline"]:
+			frames				= []
+			for frame in layer["frames"]:
+				if frame["data"] and isinstance(frame["data"],dict):
+					fix		= {}
+					for x in frame["data"]:
+						fix[int(x)]	= {}
+						for y in frame["data"][x]:
+							fix[int(x)][int(y)]	= frame["data"][x][y]
+					frame["data"]	= fix
+				frames.append(frame)
+			layer["frames"]	= frames
+			newdata["timeline"].append(layer)
+		return newdata
+	
 	# length of animation
 	def animation_length(self):
 		max_frames	= 0
@@ -2281,6 +2295,8 @@ class Application(tk.Frame):
 		end			= self.animation["properties"]["selected_frame"] if from_start else length
 		start_time	= start*speed
 		self.stage_preview.delete(self.building)
+		if from_start:
+			self.animation["properties"]["selected_frame"]	= 0
 		if self.audio:
 			#await asyncio.sleep(min(500,speed*2))
 			time.sleep(min(500,speed*2))

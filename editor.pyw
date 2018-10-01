@@ -240,6 +240,7 @@ class Application(tk.Frame):
 		self.is_loading		= False
 		self.is_m1_down		= False
 		self.is_m3_down		= False
+		self.is_shift_down	= False
 		self.resize			= False
 		self.file			= ""
 		self.tool			= ""
@@ -445,6 +446,9 @@ class Application(tk.Frame):
 		self.root.config(menu=self.menubar)
 		
 		self.root.bind_all("<Tab>", self.change_layer)
+		self.root.bind_all("<Shift_L>",lambda event:self.press_shift(event,True))
+		self.root.bind_all("<Shift_R>",lambda event:self.press_shift(event,True))
+		self.root.bind_all("<KeyRelease>",lambda event:self.press_shift(event,False))
 	
 	# create tkinter widgets for timeline (layers & frame holder)
 	def create_timeline(self):
@@ -1396,10 +1400,10 @@ class Application(tk.Frame):
 			return
 		if (self.is_m1_down or self.is_m3_down) and self.start_x is not None and self.start_y is not None:
 			if self.tool=="line":
-				self.line(self.end_x,self.end_y,self.is_m1_down,True,True)
+				self.line(self.end_x,self.end_y,self.is_m1_down,True,True,self.is_shift_down)
 				return
 			elif self.tool=="rectangle":
-				self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,True)
+				self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,True,self.is_shift_down)
 				return
 		if self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
 			self.edit_history_add("ceruza eszköz")
@@ -1499,9 +1503,9 @@ class Application(tk.Frame):
 		if self.is_playing or self.is_loading:
 			return
 		if self.tool=="line":
-			self.line(self.end_x,self.end_y,self.is_m1_down,True,False)
+			self.line(self.end_x,self.end_y,self.is_m1_down,True,False,self.is_shift_down)
 		elif self.tool=="rectangle":
-			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
+			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False,self.is_shift_down)
 		elif self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
 			self.edit_history_add("ceruza eszköz")
 		self.is_m1_down	= False
@@ -1539,9 +1543,9 @@ class Application(tk.Frame):
 			if self.tool=="pencil":
 				self.pencil(x,y,self.is_m1_down,True)
 			elif self.tool=="line":
-				self.line(x,y,self.is_m1_down,True,True)
+				self.line(x,y,self.is_m1_down,True,True,self.is_shift_down)
 			elif self.tool=="rectangle":
-				self.rectangle(x,y,self.is_m1_down,True,True)
+				self.rectangle(x,y,self.is_m1_down,True,True,self.is_shift_down)
 			elif self.tool=="fill":
 				self.fill(x,y,self.is_m1_down,True)
 			elif self.tool=="picker":
@@ -1585,9 +1589,9 @@ class Application(tk.Frame):
 		if self.is_playing or self.is_loading:
 			return
 		if self.tool=="line":
-			self.line(self.end_x,self.end_y,self.is_m1_down,False,False)
+			self.line(self.end_x,self.end_y,self.is_m1_down,False,False,self.is_shift_down)
 		elif self.tool=="rectangle":
-			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False)
+			self.rectangle(self.end_x,self.end_y,self.is_m1_down,True,False,self.is_shift_down)
 		elif self.tool=="pencil" and (self.is_m1_down or self.is_m3_down):
 			self.edit_history_add("ceruza eszköz")
 		self.is_m1_down	= False
@@ -1624,9 +1628,9 @@ class Application(tk.Frame):
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.pencil(x,y,self.is_m1_down,False)
 			elif self.tool=="line":
-				self.line(x,y,self.is_m1_down,False,True)
+				self.line(x,y,self.is_m1_down,False,True,self.is_shift_down)
 			elif self.tool=="rectangle":
-				self.rectangle(x,y,self.is_m1_down,False,True)
+				self.rectangle(x,y,self.is_m1_down,False,True,self.is_shift_down)
 			elif self.tool=="fill":
 				if x>=0 and x<self.animation["stage"]["width"] and y>=0 and y<self.animation["stage"]["height"]:
 					self.fill(x,y,self.is_m1_down,False)
@@ -1847,7 +1851,7 @@ class Application(tk.Frame):
 			self.render_preview_helper(x,y,color)
 
 	# draw line based on Bresenham’s algorithm (can render without actually altering the frame's contents)
-	def line(self,x,y,add=True,is_editor=True,hint=True):
+	def line(self,x,y,add=True,is_editor=True,hint=True,straight=False):
 		if hint:
 			if self.start_x is None:
 				self.start_x	= x
@@ -1870,6 +1874,13 @@ class Application(tk.Frame):
 		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
 		dx = abs(x1 - x0)
 		dy = abs(y1 - y0)
+		if straight:
+			if dy<dx:
+				dy	= 0
+				y0	= self.start_y
+			else:
+				dx	= 0
+				x0	= self.start_x
 		sx = -1 if x0 > x1 else 1
 		sy = -1 if y0 > y1 else 1
 		err = dx-dy
@@ -1900,15 +1911,16 @@ class Application(tk.Frame):
 				y0 = y0 + sy
 
 		if not hint:
-			if x not in frame:
-				frame[x]		= {}
-			if add:
-				frame[x][y]		= self.animation["stage"]["palette"][self.color]
-			else:
-				if x in frame and y in frame[x]:
-					del frame[x][y]
-					if not frame[x]:
-						del frame[x]
+			if not straight:
+				if x not in frame:
+					frame[x]		= {}
+				if add:
+					frame[x][y]		= self.animation["stage"]["palette"][self.color]
+				else:
+					if x in frame and y in frame[x]:
+						del frame[x][y]
+						if not frame[x]:
+							del frame[x]
 			self.start_x	= None
 			self.start_y	= None
 			if not frame:
@@ -1919,7 +1931,7 @@ class Application(tk.Frame):
 			self.edit_history_add("vonal eszköz")
 	
 	# draw rectangle (can render without actually altering the frame's contents)
-	def rectangle(self,x,y,add=True,is_editor=True,hint=True):
+	def rectangle(self,x,y,add=True,is_editor=True,hint=True,straight=False):
 		if hint:
 			if self.start_x is None:
 				self.start_x	= x
@@ -1938,13 +1950,33 @@ class Application(tk.Frame):
 				self.render_preview(True)
 		else:
 			frame, select= self.get_frame()
-		x0,x1,y0,y1		= x,self.start_x,y,self.start_y
+		if straight:
+			if (x-self.start_x)**2<(y-self.start_y)**2:
+				if self.start_y<y:
+					dif	= (y-self.start_y)
+				else:	
+					dif	= -(y-self.start_y)
+				if self.start_x<x:
+					x		= self.start_x+dif
+				else:
+					x		= self.start_x-dif
+			else:
+				if self.start_x<x:
+					dif	= (x-self.start_x)
+				else:	
+					dif	= -(x-self.start_x)
+				if self.start_y<y:
+					y		= self.start_y+dif
+				else:
+					y		= self.start_y-dif
+			
+		x0,x1,y0,y1	= x,self.start_x,y,self.start_y
 		if x0>x1:
-			x0,x1=x1,x0
-		x1	+= 1
+			x0,x1		= x1,x0
+		x1			+= 1
 		if y0>y1:
-			y0,y1=y1,y0
-		y1	+= 1
+			y0,y1		= y1,y0
+		y1			+= 1
 		for _x in range(x0,x1):
 			for _y in range(y0,y1):
 				if hint:
@@ -2166,6 +2198,16 @@ class Application(tk.Frame):
 			return	
 		self.animation["properties"]["selected_layer"] = (self.animation["properties"]["selected_layer"]+1)%len(self.animation["timeline"])
 		self.render(True)
+	
+	# workaround to know if shift was pressed or released
+	def press_shift(self,event=None,is_down=True):
+		if event:
+			if is_down:
+				self.is_shift_down	= True
+				return
+			elif self.is_shift_down:
+				if event.keysym in ("Shift_L","Shift_R"):
+					self.is_shift_down	= False
 	
 	# window resize function that lags so information passed is usually inaccurate
 	def on_resize(self,event):

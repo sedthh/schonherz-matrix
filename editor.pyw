@@ -42,6 +42,7 @@ PROFILES	= {
 		"speed"				: 100,
 		"default"			: "0",
 		"background-color"	: "#000000",
+		"stage-color"		: "#222222",
 		"border-color"		: "#cccccc",
 		"skybox-color"		: "#0f1114",
 		"font-color"		: "#ffffff",
@@ -56,10 +57,10 @@ PROFILES	= {
 		"skip_x"			: 2,
 		"skip_y"			: 2,
 		"mode"				: "12-bit RGB",
-		"palette"			: ["#FFFFFF","#AAAAAA","#444444","#660000","#FF0000",
-								"#FF00FF","#AA00AA","#AA00FF","#0000AA","#0000FF",
-								"#00FFFF","#00FFAA","#00AAAA","#00AA00","#00FF00",
-								"#AAFF00","#FFFF00","#AAAA00","#AA6600","#FFAA00"
+		"palette"			: ["#FFFFFF","#AAAAAA","#444444","#000000","#660000",
+								"#FF0000","#FF00FF","#AA00AA","#AA00FF","#0000AA",
+								"#0000FF","#00FFFF","#00FFAA","#00AAAA","#00AA00",
+								"#00FF00","#AAFF00","#FFFF00","#FFAA00","#AAAA00",
 							],
 		"images"			: {
 			"preview"				: {
@@ -245,7 +246,7 @@ class Application(tk.Frame):
 		self.file			= ""
 		self.tool			= ""
 		self.color			= 0
-		self.start_x		= None
+		self.start_x		= None	# workarounds for drawing lines and rectangles
 		self.end_x			= 0
 		self.start_y		= None
 		self.end_y			= 0
@@ -265,6 +266,7 @@ class Application(tk.Frame):
 		self.warned_about_vlc=False
 		self.frame_marker	= None
 		self.timeline_layer_list= []
+		self.mouse_pos		= {"type":"stage","event":None}	# workaround for when drawing with shift
 
 		# images
 		self.path			= os.path.dirname(os.path.realpath(__file__))	
@@ -683,11 +685,11 @@ class Application(tk.Frame):
 			if not play:
 				self.stage_editor.delete("all")
 				if size_x<12:
-					self.stage_editor.create_rectangle(left, top, left+p_width*size_x, top+p_height*size_y, fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])		
+					self.stage_editor.create_rectangle(left, top, left+p_width*size_x, top+p_height*size_y, fill=self.animation["stage"]["stage-color"], outline=self.animation["stage"]["border-color"])		
 				else:
 					for x in range(p_width):
 						for y in range(p_height):
-							self.stage_editor.create_rectangle(left+size_x*x, top+size_y*y, left+size_x*(x+1), top+size_y*(y+1), fill=self.animation["stage"]["background-color"], outline=self.animation["stage"]["border-color"])
+							self.stage_editor.create_rectangle(left+size_x*x, top+size_y*y, left+size_x*(x+1), top+size_y*(y+1), fill=self.animation["stage"]["stage-color"], outline=self.animation["stage"]["border-color"])
 				self.stage_editor.create_line(left+int(p_width*size_x/2),top,left+int(p_width*size_x/2),top+p_height*size_y,fill=self.animation["stage"]["border-color"],width=2)
 				self.stage_editor.create_line(left,top+int(p_height*size_y/2),left+p_width*size_x,top+int(p_height*size_y/2),fill=self.animation["stage"]["border-color"],width=2)
 			
@@ -729,8 +731,8 @@ class Application(tk.Frame):
 						else:
 							layer["frames"][select]["type"]="matrix"		
 			if not play:
-				x_scroll	= max((min_x+1)*size_x,(max(p_width,max_x-min_x)+1)*size_x)
-				y_scroll	= max((min_y+1)*size_y,(max(p_height,max_y-min_y)+1)*size_y)
+				x_scroll	= max(max((min_x+1)*size_x,(max(p_width,max_x-min_x)+1)*size_x),width-p_width*size_x)
+				y_scroll	= max(max((min_y+1)*size_y,(max(p_height,max_y-min_y)+1)*size_y),height-p_height*size_y)
 				self.stage_editor.configure(scrollregion=(-x_scroll/2,-y_scroll/2,x_scroll*2,y_scroll*2))
 	
 	# render preview window, timer and currently visible pixels that were calculated in "render_stage" function (based on visible frames in all layers)
@@ -1520,6 +1522,7 @@ class Application(tk.Frame):
 	def mouse_move_stage(self,event):
 		if self.is_playing or self.is_loading:
 			return
+		self.mouse_pos	= {"type":"stage","event":event}
 		
 		size_x	= max(1,self.animation["properties"]["zoom"])
 		size_y	= size_x*self.animation["stage"]["ratio"]
@@ -1606,6 +1609,7 @@ class Application(tk.Frame):
 	def mouse_move_preview(self,event):
 		if self.is_playing or self.is_loading:
 			return
+		self.mouse_pos	= {"type":"preview","event":event}
 
 		width	= self.stage_preview.winfo_width()
 		height	= self.stage_preview.winfo_height()
@@ -2203,7 +2207,12 @@ class Application(tk.Frame):
 	def press_shift(self,event=None,is_down=True):
 		if event:
 			if is_down:
-				self.is_shift_down	= True
+				if not self.is_shift_down:
+					self.is_shift_down	= True
+					if self.mouse_pos["type"]=="stage":
+						self.mouse_move_stage(self.mouse_pos["event"])
+					else:
+						self.mouse_move_preview(self.mouse_pos["event"])
 				return
 			elif self.is_shift_down:
 				if event.keysym in ("Shift_L","Shift_R"):

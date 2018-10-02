@@ -26,201 +26,16 @@ from tkinter import messagebox
 from tkinter.colorchooser import askcolor
 from tkinter.ttk import Progressbar
 
+from libs.profiles import *
+from libs.layouts import *
+
 ##### GLOBALS
 
 TITLE		= "QPY"							# name for window title
 HEADER		= "QPY"							# file headers
 NAME		= "QPY Animáció Szerkesztő"		# software name
-VERSION		= "0.1.7 alfa"					# version number
+VERSION		= "0.1.8 alfa"					# version number
 URL			= "https://github.com/sedthh/schonherz-matrix"
-PROFILES	= {	
-	"SCH"		: {	# default display profile for Schönherz Matrix
-		"profile"			: "sch",
-		"width"				: 32,
-		"height"			: 26,
-		"ratio"				: 1.5,
-		"speed"				: 100,
-		"default"			: "0",
-		"background-color"	: "#000000",
-		"stage-color"		: "#222222",
-		"border-color"		: "#cccccc",
-		"skybox-color"		: "#0f1114",
-		"font-color"		: "#ffffff",
-		"font-x"			: 150,
-		"font-y"			: 14,
-		"offset_x"			: 29,
-		"offset_y"			: 109,
-		"size_x"			: 5,
-		"size_y"			: 5,
-		"pad_x"				: 4.75,
-		"pad_y"				: 14.2,
-		"skip_x"			: 2,
-		"skip_y"			: 2,
-		"mode"				: "12-bit RGB",
-		"palette"			: ["#FFFFFF","#AAAAAA","#444444","#000000","#660000",
-								"#FF0000","#FF00FF","#AA00AA","#AA00FF","#0000AA",
-								"#0000FF","#00FFFF","#00FFAA","#00AAAA","#00AA00",
-								"#00FF00","#AAFF00","#FFFF00","#FFAA00","#AAAA00",
-							],
-		"images"			: {
-			"preview"				: {
-				"src"					: "sch.gif",
-				"width"					: 300,
-				"height"				: 420
-			}
-		}
-	}
-}
-LAYOUT		= {
-	"DEFAULT"	: { # default color scheme
-		"history_size"		: 7,
-		"root"				: "#eeeeee",
-		"stage"				: "#bbbbbb",
-		"toolbar"			: "#dddddd",
-		"toolbar-width"		: 30,
-		"toolbar-height"	: 30,
-		"toolbar-padding"	: 5,
-		"toolbar-column"	: 1,
-		"button"			: "#ffffff",
-		"button-active"		: "#000000",
-		"button-width"		: 30,
-		"button-active-width": 50,
-		"button-height"		: 20,
-		"layer"				: "#dddddd",
-		"layer-active"		: "#aaaacc",
-		"layer-color"		: "#000000",
-		"layer-outline"		: "#444444",
-		"layer-outline-highlight": "#ffffff",
-		"layer-offset"		: 30,
-		"layer-height"		: 40,
-		"layer-width"		: 200,
-		"frame-width"		: 10,
-		"frame-active"		: "#aa0000",
-		"frame-color"		: "#cccccc",
-		"frame-empty"		: "#ffffff",
-		"frame-matrix"		: "#aaaaaa",
-		"frame-border"		: "#666666",
-		"frame-marker"		: "#0000aa",
-		"tools"				: ["pencil","line","rectangle","fill","picker","zoom"],
-		"palette-length"	: 20,
-		"palette-width"		: 20,
-		"palette-height"	: 20,
-		"palette-select-width"	: 40,
-		"palette-select-height"	: 20,
-		"images"			: {
-			"icon"				: {
-				"src"					: "icon.gif",
-				"width"					: 64,
-				"height"				: 64
-			},
-			"pencil"			: {
-				"src"					: "pencil.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"pencil-active"		: {
-				"src"					: "pencil-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"line"				: {
-				"src"					: "line.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"line-active"		: {
-				"src"					: "line-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"rectangle"			: {
-				"src"					: "rectangle.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"rectangle-active"			: {
-				"src"					: "rectangle-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"fill"				: {
-				"src"					: "fill.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"fill-active"		: {
-				"src"					: "fill-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"picker"			: {
-				"src"					: "picker.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"picker-active"		: {
-				"src"					: "picker-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"zoom"				: {
-				"src"					: "zoom.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"zoom-active"		: {
-				"src"					: "zoom-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"palette"			: {
-				"src"					: "palette.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"palette-active"		: {
-				"src"					: "palette-active.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"palette-select"	: {
-				"src"					: "palette-select.gif",
-				"width"					: 40,
-				"height"				: 20
-			},
-			"rewind"			: {
-				"src"					: "rewind.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"back"			: {
-				"src"					: "back.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"play"			: {
-				"src"					: "play.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"pause"			: {
-				"src"					: "pause.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"next"			: {
-				"src"					: "next.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-			"end"			: {
-				"src"					: "end.gif",
-				"width"					: 20,
-				"height"				: 20
-			},
-		}
-	}
-}
 
 ##### EDITOR WINDOW
 
@@ -279,18 +94,18 @@ class Application(tk.Frame):
 				notfound.append(self.animation["stage"]["images"][img]["src"])
 				self.images[img]	= tk.PhotoImage(width=self.animation["stage"]["images"][img]["width"],height=self.animation["stage"]["images"][img]["height"])
 		
-		for img in LAYOUT[self.skin]["images"]:
+		for img in LAYOUTS[self.skin]["images"]:
 			try:
-				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUT[self.skin]["images"][img]["src"]),width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
+				self.images[img]	= tk.PhotoImage(file=os.path.join(self.path,"images",LAYOUTS[self.skin]["images"][img]["src"]),width=LAYOUTS[self.skin]["images"][img]["width"],height=LAYOUTS[self.skin]["images"][img]["height"])
 			except:
-				notfound.append(LAYOUT[self.skin]["images"][img]["src"])
-				self.images[img]	= tk.PhotoImage(width=LAYOUT[self.skin]["images"][img]["width"],height=LAYOUT[self.skin]["images"][img]["height"])
+				notfound.append(LAYOUTS[self.skin]["images"][img]["src"])
+				self.images[img]	= tk.PhotoImage(width=LAYOUTS[self.skin]["images"][img]["width"],height=LAYOUTS[self.skin]["images"][img]["height"])
 		if notfound:
 			self.error("A keresett fájl nem található!","Nem található(k): "+",".join(notfound))
 		
 		# generate editor window
 		self.root.minsize(self.width,self.height)
-		self.root.configure(background=LAYOUT[self.skin]["root"])
+		self.root.configure(background=LAYOUTS[self.skin]["root"])
 		self.root.protocol("WM_DELETE_WINDOW", self.file_quit)
 		try:
 			self.create_menubar()
@@ -325,7 +140,7 @@ class Application(tk.Frame):
 			},
 			"timeline"			: []
 		}
-		while len(data["stage"]["palette"])<LAYOUT[self.skin]["palette-length"]:
+		while len(data["stage"]["palette"])<LAYOUTS[self.skin]["palette-length"]:
 			data["stage"]["palette"].append("#ffffff")
 		# TODO: allow the manual addition of multiple layers later
 		for layer in ["Felső réteg","Középső réteg","Hátsó réteg"]:
@@ -454,10 +269,10 @@ class Application(tk.Frame):
 	
 	# create tkinter widgets for timeline (layers & frame holder)
 	def create_timeline(self):
-		height				= LAYOUT[self.skin]["layer-height"]*3+LAYOUT[self.skin]["layer-offset"]
-		self.timeline 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
+		height				= LAYOUTS[self.skin]["layer-height"]*3+LAYOUTS[self.skin]["layer-offset"]
+		self.timeline 		= tk.Frame(self.root, bg=LAYOUTS[self.skin]["root"], bd=0, highlightthickness=0)
 		tk.Grid.columnconfigure(self.timeline, 1, weight=1)
-		self.timeline_layers= tk.Canvas(self.timeline, width=LAYOUT[self.skin]["layer-width"], height=height, bg=LAYOUT[self.skin]["root"], bd=0, highlightthickness=0)
+		self.timeline_layers= tk.Canvas(self.timeline, width=LAYOUTS[self.skin]["layer-width"], height=height, bg=LAYOUTS[self.skin]["root"], bd=0, highlightthickness=0)
 		self.timeline_layers.grid(row=0,column=0,sticky="w")
 		self.timeline_pos	= tk.Label(self.timeline,font="fixedsys 10",text="x:-100 y: -100 ")
 		self.timeline_pos.grid(row=1,column=0,sticky="en")
@@ -477,18 +292,18 @@ class Application(tk.Frame):
 
 	# create tkitner widgets for stage (toolbar, stage, preview, color palette, playback)
 	def create_stage(self):
-		self.stage 		= tk.Frame(self.root, bg=LAYOUT[self.skin]["toolbar"], bd=0)
+		self.stage 		= tk.Frame(self.root, bg=LAYOUTS[self.skin]["toolbar"], bd=0)
 		tk.Grid.columnconfigure(self.stage, 1, weight=1)
 		tk.Grid.rowconfigure(self.stage, 0, weight=1)
-		self.stage_tools= tk.Frame(self.stage,width=100, bg=LAYOUT[self.skin]["toolbar"], bd=0, highlightthickness=0)
+		self.stage_tools= tk.Frame(self.stage,width=100, bg=LAYOUTS[self.skin]["toolbar"], bd=0, highlightthickness=0)
 		self.stage_tools.grid(row=0,column=0,sticky="nswe")
 		self.stage_tools_buttons={}
-		for i,button in enumerate(LAYOUT[self.skin]["tools"]):
-			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images[button],bg=LAYOUT[self.skin]["button"],bd=1)
+		for i,button in enumerate(LAYOUTS[self.skin]["tools"]):
+			self.stage_tools_buttons[button]			= tk.Button(self.stage_tools,width=LAYOUTS[self.skin]["button-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images[button],bg=LAYOUTS[self.skin]["button"],bd=1)
 			self.stage_tools_buttons[button]["command"]	= lambda workaround=button: self.button_tool(workaround)
-			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUT[self.skin]["toolbar-column"])),column=int(i%LAYOUT[self.skin]["toolbar-column"]),sticky="w")
+			self.stage_tools_buttons[button].grid(row=int(i/(LAYOUTS[self.skin]["toolbar-column"])),column=int(i%LAYOUTS[self.skin]["toolbar-column"]),sticky="w")
 			
-		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUT[self.skin]["stage"], width=428, height=411, bd=0,highlightthickness=0)
+		self.stage_editor= tk.Canvas(self.stage, bg=LAYOUTS[self.skin]["stage"], width=428, height=411, bd=0,highlightthickness=0)
 		self.stage_editor.grid(row=0,column=1,sticky="nswe")
 		self.stage_scrollbar_h= tk.Scrollbar(self.stage,orient='vertical',command=self.stage_editor.yview)
 		self.stage_scrollbar_h.grid(row=0,column=2,sticky="ns")
@@ -500,35 +315,35 @@ class Application(tk.Frame):
 		self.stage_editor.configure(yscrollcommand = self.stage_scrollbar_h.set)
 		self.stage_editor.configure(xscrollcommand = self.stage_scrollbar_w.set)
 		
-		self.stage_colorpicker_padding= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=428, height=LAYOUT[self.skin]["toolbar-padding"])
+		self.stage_colorpicker_padding= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUTS[self.skin]["toolbar"], width=428, height=LAYOUTS[self.skin]["toolbar-padding"])
 		self.stage_colorpicker_padding.grid(row=2,column=1,sticky="nswe")
-		self.stage_colorpicker= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=428, height=LAYOUT[self.skin]["toolbar-height"]-LAYOUT[self.skin]["toolbar-padding"])
+		self.stage_colorpicker= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUTS[self.skin]["toolbar"], width=428, height=LAYOUTS[self.skin]["toolbar-height"]-LAYOUTS[self.skin]["toolbar-padding"])
 		self.stage_colorpicker.grid(row=3,column=1,sticky="nswe")
 		self.stage_colorpicker_buttons=[]
 		color	= self.animation["stage"]["palette"][self.color]
-		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-select-width"],height=LAYOUT[self.skin]["palette-select-height"],image=self.images["palette-select"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+		self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUTS[self.skin]["palette-select-width"],height=LAYOUTS[self.skin]["palette-select-height"],image=self.images["palette-select"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 		self.stage_colorpicker_buttons[-1]["command"]	= lambda: self.button_colorpicker(-1)
 		self.stage_colorpicker_buttons[-1].grid(row=0,column=0,sticky="w")
-		tk.Frame(self.stage_colorpicker, bg=LAYOUT[self.skin]["toolbar"],width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"]).grid(row=0, column=1,sticky="nswe")
+		tk.Frame(self.stage_colorpicker, bg=LAYOUTS[self.skin]["toolbar"],width=LAYOUTS[self.skin]["palette-width"],height=LAYOUTS[self.skin]["palette-height"]).grid(row=0, column=1,sticky="nswe")
 		for i,color in enumerate(self.animation["stage"]["palette"]):
-			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUT[self.skin]["palette-width"],height=LAYOUT[self.skin]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
+			self.stage_colorpicker_buttons.append(tk.Button(self.stage_colorpicker,width=LAYOUTS[self.skin]["palette-width"],height=LAYOUTS[self.skin]["palette-height"],image=self.images["palette"],bg=color,highlightcolor=color,relief="flat",bd=0,highlightthickness=0,highlightbackground=color,fg=color,activebackground=color,activeforeground=color,cursor="hand2"))
 			self.stage_colorpicker_buttons[-1]["command"]	= lambda workaround=i: self.button_colorpicker(workaround)
 			self.stage_colorpicker_buttons[-1].grid(row=0,column=i+2,sticky="nswe")
 			self.stage_colorpicker_buttons[-1].bind("<Button-3>",lambda event, workaround=i:[self.button_colorpicker(workaround),self.button_colorpicker(-1)])
 		self.stage_colorpicker_buttons[0].bind("<Button-3>",lambda event:self.button_colorpicker(-1))
 		self.stage_colorpicker_buttons[1].configure(image=self.images["palette-active"])	
 		
-		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUT[self.skin]["toolbar"], width=300, height=LAYOUT[self.skin]["toolbar-height"])
+		self.stage_playback		= tk.Frame(self.stage, bd=0, highlightthickness=0, bg=LAYOUTS[self.skin]["toolbar"], width=300, height=LAYOUTS[self.skin]["toolbar-height"])
 		self.stage_playback.grid(row=3,column=3)
-		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["rewind"],bg=LAYOUT[self.skin]["button"],command=self.playback_rewind)
+		self.stage_playback_rewind = tk.Button(self.stage_playback,width=LAYOUTS[self.skin]["button-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images["rewind"],bg=LAYOUTS[self.skin]["button"],command=self.playback_rewind)
 		self.stage_playback_rewind.grid(row=0,column=0,sticky="nsw")		
-		self.stage_playback_back = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["back"],bg=LAYOUT[self.skin]["button"],command=self.playback_back)
+		self.stage_playback_back = tk.Button(self.stage_playback,width=LAYOUTS[self.skin]["button-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images["back"],bg=LAYOUTS[self.skin]["button"],command=self.playback_back)
 		self.stage_playback_back.grid(row=0,column=1,sticky="nsw")		
-		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-active-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["play"],bg=LAYOUT[self.skin]["button"],command=self.playback_toggle)
+		self.stage_playback_toggle = tk.Button(self.stage_playback,width=LAYOUTS[self.skin]["button-active-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images["play"],bg=LAYOUTS[self.skin]["button"],command=self.playback_toggle)
 		self.stage_playback_toggle.grid(row=0,column=2,sticky="nswe")
-		self.stage_playback_next = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["next"],bg=LAYOUT[self.skin]["button"],command=self.playback_next)
+		self.stage_playback_next = tk.Button(self.stage_playback,width=LAYOUTS[self.skin]["button-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images["next"],bg=LAYOUTS[self.skin]["button"],command=self.playback_next)
 		self.stage_playback_next.grid(row=0,column=3,sticky="nsw")				
-		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUT[self.skin]["button-width"],height=LAYOUT[self.skin]["button-height"],image=self.images["end"],bg=LAYOUT[self.skin]["button"],command=self.playback_end)
+		self.stage_playback_end = tk.Button(self.stage_playback,width=LAYOUTS[self.skin]["button-width"],height=LAYOUTS[self.skin]["button-height"],image=self.images["end"],bg=LAYOUTS[self.skin]["button"],command=self.playback_end)
 		self.stage_playback_end.grid(row=0,column=4,sticky="nse")		
 		
 		self.stage_editor.bind('<Enter>',self.mouse_to_hand)
@@ -548,36 +363,36 @@ class Application(tk.Frame):
 		self.stage_editor.bind("<MouseWheel>", self.mouse_wheel_stage)
 		self.stage_preview.bind("<MouseWheel>", self.mouse_wheel_stage)
 		
-		for i,tool in enumerate(LAYOUT[self.skin]["tools"]):
+		for i,tool in enumerate(LAYOUTS[self.skin]["tools"]):
 			self.root.bind_all("<Key-"+str(i+1)+">", lambda event,workaround=tool:self.button_tool(workaround) if not self.block_hotkeys else None)
-		self.button_tool(LAYOUT[self.skin]["tools"][0])
+		self.button_tool(LAYOUTS[self.skin]["tools"][0])
 	
 	### RENDER ELEMENTS
 	# render layers & layer select
 	def render_layers(self,redraw=False):
-		offset 			= LAYOUT[self.skin]["layer-offset"]
-		height 			= LAYOUT[self.skin]["layer-height"]-1
-		width			= LAYOUT[self.skin]["layer-width"]-1
+		offset 			= LAYOUTS[self.skin]["layer-offset"]
+		height 			= LAYOUTS[self.skin]["layer-height"]-1
+		width			= LAYOUTS[self.skin]["layer-width"]-1
 		if redraw:
 			self.timeline_layers.delete("all")
 			self.timeline_layers_list = []
 			for i, layer in enumerate(self.animation["timeline"]):
-				self.timeline_layers_list.append(self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer"], outline=LAYOUT[self.skin]["layer-outline"]))
-				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
-				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUT[self.skin]["layer-outline-highlight"])
-				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=layer["name"],anchor="w")
-			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+				self.timeline_layers_list.append(self.timeline_layers.create_rectangle(0, offset+i*height, width, offset+(i+1)*height, fill=LAYOUTS[self.skin]["layer"], outline=LAYOUTS[self.skin]["layer-outline"]))
+				self.timeline_layers.create_line(0, offset+i*height, width, offset+i*height, fill=LAYOUTS[self.skin]["layer-outline-highlight"])
+				self.timeline_layers.create_line(0, offset+i*height, 0, offset+(i+1)*height, fill=LAYOUTS[self.skin]["layer-outline-highlight"])
+				self.timeline_layers.create_text(10,offset+i*height+(height/2),fill=LAYOUTS[self.skin]["layer-color"],font="Helvetica 10", text=layer["name"],anchor="w")
+			self.timeline_layers.create_line(width, offset, width+1, offset, fill=LAYOUTS[self.skin]["layer-color"])
 		for i,layer in enumerate(self.timeline_layers_list):
 			if i==self.animation["properties"]["selected_layer"]:
-				self.timeline_layers.itemconfig(layer,fill=LAYOUT[self.skin]["layer-active"])
+				self.timeline_layers.itemconfig(layer,fill=LAYOUTS[self.skin]["layer-active"])
 			else:
-				self.timeline_layers.itemconfig(layer,fill=LAYOUT[self.skin]["layer"])
+				self.timeline_layers.itemconfig(layer,fill=LAYOUTS[self.skin]["layer"])
 
 	# render visible frames, frame timing & frame select
 	def render_frames(self,redraw=False):
-		offset 			= LAYOUT[self.skin]["layer-offset"]-1
-		width			= LAYOUT[self.skin]["frame-width"]
-		height			= LAYOUT[self.skin]["layer-height"]
+		offset 			= LAYOUTS[self.skin]["layer-offset"]-1
+		width			= LAYOUTS[self.skin]["frame-width"]
+		height			= LAYOUTS[self.skin]["layer-height"]
 		max_frames		= self.animation_length() + 50 # extra 5 seconds visible in editor
 		max_height		= (len(self.animation["timeline"])+1)*height
 		max_width		= max(60,int(self.timeline_frames.winfo_width()/width)+1)
@@ -592,12 +407,12 @@ class Application(tk.Frame):
 				if workaround=="link":
 					workaround	= self.animation["timeline"][j]["frames"][self.animation["timeline"][j]["frames"][min(visible_min_i,len(self.animation["timeline"][j]["frames"])-1)]["data"]]["type"]
 				if workaround=="empty":		
-					color		= LAYOUT[self.skin]["frame-empty"]
+					color		= LAYOUTS[self.skin]["frame-empty"]
 				else:
-					color		= LAYOUT[self.skin]["frame-matrix"]
+					color		= LAYOUTS[self.skin]["frame-matrix"]
 				last		= color
 				stipple		= "gray50"
-				outline		= LAYOUT[self.skin]["frame-color"]
+				outline		= LAYOUTS[self.skin]["frame-color"]
 				cache_frame	= 0
 				for i in range(visible_min_i,max(max_width,max_frames*width)+1):
 					if i<len(self.animation["timeline"][j]["frames"]):
@@ -608,9 +423,9 @@ class Application(tk.Frame):
 									if i>visible_max_i:
 										break
 								cache_frame=0
-							color	= LAYOUT[self.skin]["frame-empty"]
+							color	= LAYOUTS[self.skin]["frame-empty"]
 							stipple	= ""
-							outline	= LAYOUT[self.skin]["frame-border"]
+							outline	= LAYOUTS[self.skin]["frame-border"]
 						elif self.animation["timeline"][j]["frames"][i]["type"]=="matrix":
 							if cache_frame:	
 								if i*width>visible_min and ((i-cache_frame)*width+1)<visible_max:
@@ -618,13 +433,13 @@ class Application(tk.Frame):
 									if i>visible_max_i:
 										break
 								cache_frame=0
-							color	= LAYOUT[self.skin]["frame-matrix"]
+							color	= LAYOUTS[self.skin]["frame-matrix"]
 							stipple	= ""
-							outline	= LAYOUT[self.skin]["frame-border"]
+							outline	= LAYOUTS[self.skin]["frame-border"]
 						else:
 							color	= last
 							stipple	= "gray50"
-							outline	= LAYOUT[self.skin]["frame-color"]
+							outline	= LAYOUTS[self.skin]["frame-color"]
 							cache_frame+=1
 						last		= color
 						if not cache_frame:
@@ -639,22 +454,22 @@ class Application(tk.Frame):
 							self.timeline_frames.create_line(i*width+1, offset+j*height+1, i*width+1, offset+(j+1)*height, fill=outline)
 							if i>visible_max_i:
 								break
-						outline	= LAYOUT[self.skin]["frame-color"]	
+						outline	= LAYOUTS[self.skin]["frame-color"]	
 					#self.timeline_frames.create_line(i*width, offset+j*height+1, i*width, offset+(j+1)*height, fill=outline)
 					if j==0:
 						if (i+1)*width+1>visible_min and i*width-1<visible_max:
 							if i%10==0:
-								self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUT[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
-								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+								self.timeline_frames.create_text(i*width+6,offset-12,fill=LAYOUTS[self.skin]["layer-color"],font="Helvetica 10", text=str(int(i/10)))
+								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUTS[self.skin]["layer-color"])
 							elif i%5==0:
-								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+								self.timeline_frames.create_line(i*width+1, offset-10, i*width+1, offset, fill=LAYOUTS[self.skin]["layer-color"])
 							else:
-								self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUT[self.skin]["layer-color"])
+								self.timeline_frames.create_line(i*width+1, offset-5, i*width+1, offset, fill=LAYOUTS[self.skin]["layer-color"])
 				if cache_frame:
 					if len(self.animation["timeline"][j]["frames"])*width>visible_min and ((len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1)<visible_max:
 						self.timeline_frames.create_rectangle(max(visible_min,(len(self.animation["timeline"][j]["frames"])-cache_frame)*width+1), offset+j*height+1, min(visible_max,len(self.animation["timeline"][j]["frames"])*width), offset+(j+1)*height, fill=color, stipple=stipple, outline="")
 					cache_frame=0				
-			self.timeline_frames.create_line(max(visible_min,0), offset, min(visible_max,(max(max_width,max_frames*width)+1)*width+1), offset, fill=LAYOUT[self.skin]["layer-color"])
+			self.timeline_frames.create_line(max(visible_min,0), offset, min(visible_max,(max(max_width,max_frames*width)+1)*width+1), offset, fill=LAYOUTS[self.skin]["layer-color"])
 			if self.frame_marker:
 				self.timeline_frames.delete(self.frame_marker)
 				self.frame_marker	= None
@@ -664,9 +479,9 @@ class Application(tk.Frame):
 			self.timeline_frames.delete(self.timeline_frames_select_frame)
 		except:
 			pass
-		self.timeline_frames_select	= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, 1, (self.animation["properties"]["selected_frame"]+1)*width-1, offset, outline=LAYOUT[self.skin]["frame-active"], fill=LAYOUT[self.skin]["frame-active"], stipple="gray50")
-		self.timeline_frames_select_line= self.timeline_frames.create_line(int(self.animation["properties"]["selected_frame"]*width+width*.5), offset+2, int(self.animation["properties"]["selected_frame"]*width+width*.5), max_height, fill=LAYOUT[self.skin]["frame-active"],stipple="gray25")
-		self.timeline_frames_select_frame= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, offset+self.animation["properties"]["selected_layer"]*height, (self.animation["properties"]["selected_frame"]+1)*width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height, outline=LAYOUT[self.skin]["frame-active"], fill="", stipple="gray50")
+		self.timeline_frames_select	= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, 1, (self.animation["properties"]["selected_frame"]+1)*width-1, offset, outline=LAYOUTS[self.skin]["frame-active"], fill=LAYOUTS[self.skin]["frame-active"], stipple="gray50")
+		self.timeline_frames_select_line= self.timeline_frames.create_line(int(self.animation["properties"]["selected_frame"]*width+width*.5), offset+2, int(self.animation["properties"]["selected_frame"]*width+width*.5), max_height, fill=LAYOUTS[self.skin]["frame-active"],stipple="gray25")
+		self.timeline_frames_select_frame= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, offset+self.animation["properties"]["selected_layer"]*height, (self.animation["properties"]["selected_frame"]+1)*width-1, offset+(self.animation["properties"]["selected_layer"]+1)*height, outline=LAYOUTS[self.skin]["frame-active"], fill="", stipple="gray50")
 		self.timeline_frames.configure(scrollregion=(0,0,(max(max_width,max_frames)+10)*width,height))
 		self.timeline_frames.update()
 	
@@ -750,7 +565,7 @@ class Application(tk.Frame):
 			min			= int(d/60)
 			sec			= int(d-min*60)
 			self.duration=str(min).zfill(2)+":"+str(sec).zfill(2)
-			#self.stage_preview.create_rectangle(0, height, width, self.stage_preview.winfo_height(), fill=LAYOUT[self.skin]["toolbar"], outline="")
+			#self.stage_preview.create_rectangle(0, height, width, self.stage_preview.winfo_height(), fill=LAYOUTS[self.skin]["toolbar"], outline="")
 		if not play:
 			for x in range(self.animation["stage"]["width"]):
 				for y in range(self.animation["stage"]["height"]):
@@ -805,11 +620,11 @@ class Application(tk.Frame):
 	def render_frames_mark(self):
 		if self.frame_marker:
 			self.timeline_frames.delete(self.frame_marker)
-		offset 			= LAYOUT[self.skin]["layer-offset"]-1
-		width			= LAYOUT[self.skin]["frame-width"]
-		height			= LAYOUT[self.skin]["layer-height"]
+		offset 			= LAYOUTS[self.skin]["layer-offset"]-1
+		width			= LAYOUTS[self.skin]["frame-width"]
+		height			= LAYOUTS[self.skin]["layer-height"]
 		top				= self.animation["properties"]["selected_layer"]*height+offset
-		self.frame_marker= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, top, (self.animation["properties"]["selected_frame"]+1)*width-1, top+height, outline="", fill=LAYOUT[self.skin]["frame-marker"], stipple="gray50")
+		self.frame_marker= self.timeline_frames.create_rectangle(self.animation["properties"]["selected_frame"]*width+1, top, (self.animation["properties"]["selected_frame"]+1)*width-1, top+height, outline="", fill=LAYOUTS[self.skin]["frame-marker"], stipple="gray50")
 	
 	# call most common render functions at once
 	def render(self,redraw=False):
@@ -870,37 +685,50 @@ class Application(tk.Frame):
 		if file:
 			self.file			= file
 			try:
+				self.loading_progress(10)
+				time.sleep(.25)
 				self.loading(True)
 				with codecs.open(self.file,"r",encoding="utf-8") as f:
 					data				= f.read()
+				self.loading_progress(20)
 				if '"'+HEADER+'"' not in data and "'"+HEADER+"'" not in data:
+					self.loading_progress(100)
 					return self.error("Nem megfelelő formátum!","A kiválasztott fájl nem Mátrix animáció!")
 				try:
+					self.loading_progress(50)
 					data				= json.loads(data)
 				except Exception as e:
+					self.loading_progress(100)
 					return self.error("Hibás vagy sérült fájl!",e)
 				if "header" not in data or data["header"]!=HEADER:
+					self.loading_progress(100)
 					return self.error("Nem megfelelő formátum!","A kiválasztott fájl nem Mátrix animáció!")
 				if "version" in data and "stage" in data and "properties" in data and "timeline" in data:
 					if data["version"][0]>self.version[0] or data["version"][1]>self.version[1] or data["version"][2]>self.version[2]:
 						# TODO: auto update
 						messagebox.showinfo("Eltérő verziók!", "Ez az animáció egy újabb verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
+					self.loading_progress(75)
 					self.animation		= self.json_fix(data)
 					### add variables for backward compatiblity
 					if "ratio" not in self.animation["stage"]:
 						self.animation["stage"]["ratio"]	= PROFILES["SCH"]["ratio"]
+					if "stage-color" not in self.animation["stage"]:
+						self.animation["stage"]["stage-color"]	= PROFILES["SCH"]["stage-color"]
 					self.changes_made	= False
 					self.changes_draw	= False
+					self.loading_progress(90)
 					self.edit_history_clear()
 					self.refresh_colorpicker()
 					self.music_load()
-					self.render(True)
 				else:
+					self.loading_progress(100)
 					return self.error("Hibás vagy sérült fájl!","A fájl alapján nem hozható létre animáció.")				
 			except Exception as e:
+				self.loading_progress(100)
 				self.error("Nem sikerült megnyitni a fájlt!",e)
 			self.render(True)
 			self.loading(False)
+			self.loading_progress(100)
 	
 	# save animation
 	def file_save(self,event=None):
@@ -976,7 +804,7 @@ class Application(tk.Frame):
 		if self.history:		
 			if self.history_index>0:
 				self.history_index	-= 1
-				self.animation		= self.json_fix(json.loads(self.history[self.history_index]["data"]))
+				self.animation		= self.copy_animation(self.history[self.history_index]["data"])
 				self.edit_menu.entryconfigure(0, state=tk.NORMAL)
 				if self.history[self.history_index]["type"]:
 					self.edit_menu.entryconfigure(0, label="Visszavonás: "+self.history[self.history_index]["type"])
@@ -1006,7 +834,7 @@ class Application(tk.Frame):
 				else:
 					self.edit_menu.entryconfigure(1, label="Újra")
 				self.history_index	+= 1
-				self.animation		= self.json_fix(json.loads(self.history[self.history_index]["data"]))
+				self.animation		= self.copy_animation(self.history[self.history_index]["data"])
 				self.edit_menu.entryconfigure(1, state=tk.NORMAL)
 			if self.history_index>=len(self.history)-1:
 				self.edit_menu.entryconfigure(1, state=tk.DISABLED)
@@ -1025,15 +853,15 @@ class Application(tk.Frame):
 	
 	# add event to history
 	def edit_history_add(self,type=""):
-		if not LAYOUT[self.skin]["history_size"]:
+		if not LAYOUTS[self.skin]["history_size"]:
 			self.history	= []
-		elif LAYOUT[self.skin]["history_size"]:
+		elif LAYOUTS[self.skin]["history_size"]:
 			self.history		= self.history[:self.history_index+1]
 			self.history.append({
 				"type": type,
-				"data": json.dumps(self.animation)	# for some reason, this is faster than DEEPCOPY
+				"data": self.copy_animation(self.animation)
 			})
-			self.history	= self.history[-(LAYOUT[self.skin]["history_size"]+1):]
+			self.history	= self.history[-(LAYOUTS[self.skin]["history_size"]+1):]
 		self.history_index	= len(self.history)-1
 		if self.history:
 			self.edit_menu.entryconfigure(0, state=tk.NORMAL)
@@ -1422,7 +1250,7 @@ class Application(tk.Frame):
 	def mouse_click_layers(self,event):
 		if self.is_loading:
 			return
-		y					= max(-1,int((self.timeline_layers.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
+		y					= max(-1,int((self.timeline_layers.canvasy(event.y-LAYOUTS[self.skin]["layer-offset"])/LAYOUTS[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
 			y					= -1
 		if y>-1:
@@ -1438,8 +1266,8 @@ class Application(tk.Frame):
 	def mouse_click_frames(self,event):
 		if self.is_loading:
 			return
-		x					= max(0,int((self.timeline_frames.canvasx(event.x)/LAYOUT[self.skin]["frame-width"])))
-		y					= max(-1,int((self.timeline_frames.canvasy(event.y-LAYOUT[self.skin]["layer-offset"])/LAYOUT[self.skin]["layer-height"])))
+		x					= max(0,int((self.timeline_frames.canvasx(event.x)/LAYOUTS[self.skin]["frame-width"])))
+		y					= max(-1,int((self.timeline_frames.canvasy(event.y-LAYOUTS[self.skin]["layer-offset"])/LAYOUTS[self.skin]["layer-height"])))
 		if y>=len(self.animation["timeline"]):
 			y					= -1
 		if y>-1:
@@ -1822,7 +1650,7 @@ class Application(tk.Frame):
 		self.refresh_colorpicker()
 		self.cursor("hand2")
 		if self.is_m1_down:
-			self.button_tool(LAYOUT[self.skin]["tools"][0])
+			self.button_tool(LAYOUTS[self.skin]["tools"][0])
 		self.is_m1_down	= False
 		self.is_m3_down	= False
 		self.changes_draw= False
@@ -2133,12 +1961,12 @@ class Application(tk.Frame):
 	
 	# select tool
 	def button_tool(self,parameter):
-		if parameter in LAYOUT[self.skin]["tools"]:
+		if parameter in LAYOUTS[self.skin]["tools"]:
 			self.tool	= parameter
-			for button in LAYOUT[self.skin]["tools"]:
-				self.stage_tools_buttons[button].configure(bg=LAYOUT[self.skin]["button"])
+			for button in LAYOUTS[self.skin]["tools"]:
+				self.stage_tools_buttons[button].configure(bg=LAYOUTS[self.skin]["button"])
 				self.stage_tools_buttons[button].configure(image=self.images[button])
-			self.stage_tools_buttons[parameter].configure(bg=LAYOUT[self.skin]["button-active"])
+			self.stage_tools_buttons[parameter].configure(bg=LAYOUTS[self.skin]["button-active"])
 			if parameter+"-active" in self.images:
 				self.stage_tools_buttons[parameter].configure(image=self.images[parameter+"-active"])
 	
@@ -2160,6 +1988,62 @@ class Application(tk.Frame):
 		self.edit_history_add("színkeverés")
 
 	##### MISC FUNCITONS
+	# deepcopy is slow, implement animation copy instead
+	def copy_animation(self,data):
+		result	= {
+			"header"	: data["header"],
+			"version"	: data["version"],
+			"stage"		: {},
+			"properties": {},
+			"timeline"	: []
+		}
+		for item in data["stage"]:
+			if isinstance(data["stage"][item],list):
+				result["stage"][item]	= []
+				for element in data["stage"][item]:
+					result["stage"][item].append(element)
+			elif isinstance(data["stage"][item],dict):
+				result["stage"][item]	= {}
+				for element in data["stage"][item]:
+					if isinstance(data["stage"][item][element],dict):
+						result["stage"][item][element]	= {}
+						for sub_element in data["stage"][item][element]:
+							result["stage"][item][element][sub_element]	= data["stage"][item][element][sub_element]
+					else:
+						result["stage"][item]["element"]	= element
+			else:
+				result["stage"][item]	= data["stage"][item]
+		for item in data["properties"]:
+			result["properties"][item]	= data["properties"][item]
+		for layer in data["timeline"]:
+			copylayer	= {}				
+			for item in layer:
+				if isinstance(layer[item],list):
+					copylayer[item]	= []
+					for frame in layer[item]:
+						copylayer[item].append(self.copy_frame(frame))
+				else:
+					copylayer[item]	= layer[item]
+			result["timeline"].append(copylayer)
+		return result
+
+	# deepcopy is slow, copy frames manually 
+	def copy_frame(self,data):
+		result	= {
+			"type"	: data["type"],
+			"data"	: {}
+		}
+		if isinstance(data["data"],dict):
+			for x in data["data"]:
+				if data["data"][x]:
+					result["data"][x]	= {}
+					for y in data["data"][x]:
+						if data["data"][x][y] and data["data"][x][y]!=0:
+							result["data"][x][y]	= data["data"][x][y]
+		else:
+			result["data"]	= data["data"]
+		return result	
+	
 	# JSON objects can't have int keys --> turn str keys into ints for frames
 	def json_fix(self,data):
 		newdata				= deepcopy(data)
@@ -2301,6 +2185,7 @@ class Application(tk.Frame):
 	def loading_progress(self,percentage=0):
 		if not self.progress_window:
 			self.progress_window= tk.Toplevel(self.root)
+			self.progress_window.wm_geometry("300x20")
 			self.progress_window.wm_title("Kis türelmet...")
 			self.root.call('wm', 'iconphoto', self.progress_window._w, self.images["icon"]) 
 			self.progress_bar= Progressbar(self.progress_window, orient="horizontal",length=300, mode="determinate")

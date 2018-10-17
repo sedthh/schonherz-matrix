@@ -21,6 +21,7 @@ PROFILES	= {
 		"pad_y"				: 14.2,
 		"skip_x"			: 2,
 		"skip_y"			: 2,
+		"shift"				: 2,
 		"mode"				: "12-bit RGB",
 		"palette"			: ["#FFFFFF","#AAAAAA","#444444","#000000","#660000",
 								"#FF0000","#FF00FF","#AA00AA","#AA00FF","#0000AA",

@@ -1,5 +1,7 @@
 LAYOUTS		= {
 	"DEFAULT"	: { # default layout
+		"width"				: 800,
+		"height"			: 600,
 		"history_size"		: 7,
 		"root"				: "#eeeeee",
 		"stage"				: "#bbbbbb",
@@ -34,6 +36,11 @@ LAYOUTS		= {
 		"palette-height"	: 20,
 		"palette-select-width"	: 40,
 		"palette-select-height"	: 20,
+		"zoom_step"			: 5,
+		"zoom_min"			: 1,
+		"zoom_max"			: 35,
+		"loading_width"		: 300,
+		"loading_height"	: 20,
 		"images"			: {
 			"icon"				: {
 				"src"					: "icon.gif",

@@ -1374,7 +1374,7 @@ class Application(tk.Frame):
 			self.end_x = x
 			self.end_y = y
 			if self.tool == "pencil":
-				self.pencil(x, y, self.is_m1_down, True)
+				self.pencil(x, y, self.is_m1_down, True, self.is_shift_down)
 			elif self.tool == "line":
 				self.line(x, y, self.is_m1_down, True, True, self.is_shift_down)
 			elif self.tool == "rectangle":
@@ -1459,7 +1459,7 @@ class Application(tk.Frame):
 			self.end_y = y
 			if self.tool == "pencil":
 				if x >= 0 and x < self.animation["stage"]["width"] and y >= 0 and y < self.animation["stage"]["height"]:
-					self.pencil(x, y, self.is_m1_down, False)
+					self.pencil(x, y, self.is_m1_down, False, self.is_shift_down)
 			elif self.tool == "line":
 				self.line(x, y, self.is_m1_down, False, True, self.is_shift_down)
 			elif self.tool == "rectangle":
@@ -1657,7 +1657,18 @@ class Application(tk.Frame):
 		self.changes_draw = False
 	
 	# pencil tool (uses helper function to quickly render scribbles without actually rerendering the stage)
-	def pencil(self, x, y, add=True, is_editor=True):
+	def pencil(self, x, y, add=True, is_editor=True, straight=False):
+		if straight:			# straight is actually fills an entire window
+			x = floor(x/self.animation["stage"]["shift"])*self.animation["stage"]["shift"]
+			y = floor(y / self.animation["stage"]["shift"]) * self.animation["stage"]["shift"]
+			for x_plus in range(self.animation["stage"]["shift"]):
+				for y_plus in range(self.animation["stage"]["shift"]):
+					self.pencil_pixel(x+x_plus,y+y_plus,add,is_editor)
+		else:
+			self.pencil_pixel(x, y, add, is_editor)
+
+	# draw a single pixel (uses helper function to quickly render scribbles without actually rerendering the stage)
+	def pencil_pixel(self, x, y, add=True, is_editor=True):
 		if add:
 			color = self.animation["stage"]["palette"][self.color]
 		else:

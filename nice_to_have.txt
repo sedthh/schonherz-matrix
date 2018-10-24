@@ -1,29 +1,37 @@
-Az alábbi funkciók várhatók még a következõ verziókban:
-- Bõvebb dokumentáció és kommentelt kódrészletek. 
-- Utoljára megnyitott fájlok listázása.
-- Mappák megjegyzése mentés/megnyitás/exportálás után.
-- Nyelvi fájlok használata, hogy más nyelveken is elérhetõ legyen az alkalmazás.
-- Témák választása a szerkesztõben. 
-- Átméretezhetõ GUI elemek.
-- Több képkocka együttes kijelölésének engedélyezése.
-- Ikonok hozzáadása a menü elemek mellé.
-- Hangsáv képének megjelenítése a szerkesztõben. 
-- Futtatható exe fájlok és egyéb csomagok létrehozása Windows, MacOs és Linux rendszerekhez.
-- Hangerõ szabályozás.
-- Automatikus frissítés újabb verzióra.
-- Automatikus biztonsági mentés.
+Az alÃ¡bbi funkciÃ³k vÃ¡rhatÃ³k mÃ©g a kÃ¶vetkezÅ‘ verziÃ³kban:
+- BÅ‘vebb dokumentÃ¡ciÃ³ Ã©s kommentelt kÃ³drÃ©szletek. 
+- UtoljÃ¡ra megnyitott fÃ¡jlok listÃ¡zÃ¡sa.
+- MappÃ¡k megjegyzÃ©se mentÃ©s/megnyitÃ¡s/exportÃ¡lÃ¡s utÃ¡n.
+- Nyelvi fÃ¡jlok hasznÃ¡lata, hogy mÃ¡s nyelveken is elÃ©rhetÅ‘ legyen az alkalmazÃ¡s.
+- TÃ©mÃ¡k vÃ¡lasztÃ¡sa a szerkesztÅ‘ben. 
+- ÃtmÃ©retezhetÅ‘ GUI elemek.
+- TÃ¶bb kÃ©pkocka egyÃ¼ttes kijelÃ¶lÃ©sÃ©nek engedÃ©lyezÃ©se.
+- Ikonok hozzÃ¡adÃ¡sa a menÃ¼ elemek mellÃ©.
+- HangsÃ¡v kÃ©pÃ©nek megjelenÃ­tÃ©se a szerkesztÅ‘ben. 
+- FuttathatÃ³ exe fÃ¡jlok Ã©s egyÃ©b csomagok lÃ©trehozÃ¡sa Windows, MacOs Ã©s Linux rendszerekhez.
+- HangerÅ‘ szabÃ¡lyozÃ¡s.
+- Automatikus frissÃ­tÃ©s Ãºjabb verziÃ³ra.
+- Automatikus biztonsÃ¡gi mentÃ©s.
 
-Az alábbi animációt segítõ funkciók várhatók a következõ verziókban:
-- Több layer hozzáadása.
-- Layer láthatóság és renderelés ki-, bekapcsolása
-- Layer blending mode-ok implementálása (lighten, darken, stb.)
-- Alfa csatorna (átlátszóság) hozzáadása.
-- Lasszó eszköz a képkocka részeinek kijelöléséhez és kivágás/másolás/beillesztéséhez.
-- Szöveg hozzáadás és betütípusok kiválasztása.
-- Képek importálása és különbözõ konvertálási/átméretezési módok lehetõvé tétele.
-- Transition animációs funkció képkockák között. 
-- Elõnézetnél a színprofilok figyelembe vétele és a valóságban elérhetõ LED színek szimulációja. 
-- Elõnézetnél a LED falak hibáinak és zajának szimulálása.
-- Shadow frame (elõzõ képkocka félig átlátszón való) megjelenítése az animáció megkönnyítéséhez.
+Az alÃ¡bbi animÃ¡ciÃ³t segÃ­tÅ‘ funkciÃ³k vÃ¡rhatÃ³k a kÃ¶vetkezÅ‘ verziÃ³kban:
+- TÃ¶bb layer hozzÃ¡adÃ¡sa.
+- Layer lÃ¡thatÃ³sÃ¡g Ã©s renderelÃ©s ki-, bekapcsolÃ¡sa
+- Layer blending mode-ok implementÃ¡lÃ¡sa (lighten, darken, stb.)
+- Alfa csatorna (Ã¡tlÃ¡tszÃ³sÃ¡g) hozzÃ¡adÃ¡sa.
+- LasszÃ³ eszkÃ¶z a kÃ©pkocka rÃ©szeinek kijelÃ¶lÃ©sÃ©hez Ã©s kivÃ¡gÃ¡s/mÃ¡solÃ¡s/beillesztÃ©sÃ©hez.
+- SzÃ¶veg hozzÃ¡adÃ¡s Ã©s betÃ¼tÃ­pusok kivÃ¡lasztÃ¡sa.
+- KÃ©pek importÃ¡lÃ¡sa Ã©s kÃ¼lÃ¶nbÃ¶zÅ‘ konvertÃ¡lÃ¡si/Ã¡tmÃ©retezÃ©si mÃ³dok lehetÅ‘vÃ© tÃ©tele.
+- Transition animÃ¡ciÃ³s funkciÃ³ kÃ©pkockÃ¡k kÃ¶zÃ¶tt. 
+- ElÅ‘nÃ©zetnÃ©l a szÃ­nprofilok figyelembe vÃ©tele Ã©s a valÃ³sÃ¡gban elÃ©rhetÅ‘ LED szÃ­nek szimulÃ¡ciÃ³ja. 
+- ElÅ‘nÃ©zetnÃ©l a LED falak hibÃ¡inak Ã©s zajÃ¡nak szimulÃ¡lÃ¡sa.
+- Shadow frame (elÅ‘zÅ‘ kÃ©pkocka fÃ©lig Ã¡tlÃ¡tszÃ³n valÃ³) megjelenÃ­tÃ©se az animÃ¡ciÃ³ megkÃ¶nnyÃ­tÃ©sÃ©hez.
 
-Emellett tervben van tutorial videók létrehozása a szerkesztõ használatához. 
+Emellett tervben van tutorial videÃ³k lÃ©trehozÃ¡sa a szerkesztÅ‘ hasznÃ¡latÃ¡hoz. 
+
+TODO rÃ¶vid idÅ‘n belÃ¼l:
+- insert (empty) Ã©s duplicate issue + deepcopy-k lecserÃ©lÃ©se
+- array slice-t megnÃ©zni history-nÃ¡l hogy biztos jÃ³-e (view csak)
+- replace vlc
+- darken/lighten
+- egy fÃ¡jl exe?
+- extra playback gomb

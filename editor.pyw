@@ -669,6 +669,7 @@ class Application(tk.Frame):
 		self.edit_history_clear()
 		self.refresh_colorpicker()
 		self.music_load()
+		self.timeline_frames.xview("moveto", 0.0, None)
 		self.render(True)
 	
 	# open animation (check if it's an actual animation file & check it's verion)
@@ -722,6 +723,8 @@ class Application(tk.Frame):
 					self.edit_history_clear()
 					self.refresh_colorpicker()
 					self.music_load()
+					self.timeline_frames.xview("moveto", self.animation["properties"]["selected_frame"]/(self.animation_length()), None)
+					self.render_frames(True)
 				else:
 					self.loading_progress(100)
 					return self.error("Hibás vagy sérült fájl!", "A fájl alapján nem hozható létre animáció.")
@@ -2354,7 +2357,7 @@ class Application(tk.Frame):
 		if self.animation["stage"]["profile"] == "sch":	# only supported profile at the moment
 			width = self.animation["stage"]["width"]
 			height = self.animation["stage"]["height"]
-			speed = str(self.animation["stage"]["speed"])
+			speed = self.animation["stage"]["speed"]
 			default = str(self.animation["stage"]["default"])
 			audio = json.dumps(self.animation["properties"]["music"], ensure_ascii=False)
 			team = json.dumps(self.animation["properties"]["team"], ensure_ascii=False)
@@ -2364,6 +2367,8 @@ class Application(tk.Frame):
 			length = self.animation_length()
 			current = self.animation["properties"]["selected_frame"]
 			try:
+				last_frame = ''
+				last_frame_times = 0
 				for keyframe in range(length):
 					self.animation["properties"]["selected_frame"] = keyframe
 					if keyframe % 10 == 0:
@@ -2388,8 +2393,13 @@ class Application(tk.Frame):
 							else:
 								frame_text += default+','
 						frame_text += '\n'
-					frame_text += '},'+speed+')\n'
-					output += frame_text
+					if frame_text == last_frame:
+						last_frame_times += 1
+					elif last_frame:
+						output += last_frame + '},'+str(speed*(last_frame_times+1))+')\n'
+						last_frame_times = 0
+					last_frame = frame_text
+				output += last_frame + '},'+str(speed*(last_frame_times+1))+')\n'
 				output += 'endclip()\n\nrootclip("main")\n'
 				self.animation["properties"]["selected_frame"] = current
 				try:

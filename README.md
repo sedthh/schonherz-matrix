@@ -16,22 +16,8 @@ Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-
 
 **VAGY** 
 
-Telepítsd a [Python3.6+](https://www.python.org/downloads/) vagy újabb verzióját és futtasd a forráskódot (ez Windows mellett MacOs X és Linux alatt is elérhető). A python kód futtatásához még a [VLC letöltésére](https://www.videolan.org/vlc/index.html) és az alábbi csomagok telepítésére van szükség (Windows alatt írd be ezeket a parancssorba. MacOs X és Linux alatt lehet, hogy elé kell írnod, hogy "sudo"):
+Töltsd le a teljes repót és futtasd az **editor.pyw** forráskódot [Python 3.6+](https://www.python.org/downloads/) alatt, bármely más operációs rendszeren.
 
-```python
-> pip3 install asyncio
-> pip3 install python-vlc
-```
-
-Emellett a [tkinter](https://tkdocs.com/tutorial/install.html) könyvtárra van még szükség, ha alapból nincs benn a Python disztribúcióban (vagy ha nálad a GUI köszönő viszonyban sincs azzal, ahogy ki kellene néznie). 
-
-A szükséges könyvtárak telepítése után a python (\*.py vagy \*.pyw) program fájlok futtathatóvá vállnak, dupla kattintással, vagy szintén parancssorból:
-
-```python
-> python editor.pyw
-```
-
-*Minden visszajelzést és segítséget szívesen fogadunk az alkalmazással kapcsolatban!*
 
 ![editor snapshot](images/editor015.png)
 
@@ -71,13 +57,9 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 
 - A megnyitás/mentés felugró fájl ablakai néha megfagynak Windows 10 alatt, ez sajnos az ablakkezelő könyvtár hibája.
 
-- Lejátszás alatt csak az előnézeti ablak frissül, ezzel minimalizálva a kirajzolás okozta laget. Ilyenkor a Schönherz képe sem látszódik. Ha ki is maradnak néha visszajátszáskor képkockák, a valóságban még ugyanúgy le fognak majd játszódni.
-
-- Kirajzoláskor mindig időben a legutolsó képkocka fog látszódni, egészen addig, amíg nem jön időben egy újabb képkocka.
-
 - Ha egy újabb verzióval, javításokkal nem várt problémák jönnek elő, a régebbi verziók ugyanúgy elérhetőek itt a [GitHub](https://github.com/sedthh/schonherz-matrix/releases)-on. 
 
-- A zenelejátszáshoz az alkalmazás a [VLC](https://www.videolan.org/vlc/index.html) plugin fájljait használja. Néha kicsit várni kell, mire elindul a zene lejátszása, de időben hozzáigazítja magát az aktuális képkockákhoz.
+- A zenelejátszáshoz az alkalmazás a FFMPEG-et használ.
 
 - Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra. Ugyanaz a python kód van futtatható exe fájlként a könyvtáraival becsomagolva, amit a GIT repoban is látsz. 
 
@@ -85,4 +67,4 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 
 - A tulajdonságok menüben a "Színpad nyújtása" kiválasztásával vagy a 0 gombbal lehet a szerkesztőfelület pixeleinek arányát változtatni, hogy jobban hasonlítson a végeredményre a Schönherz falán. 
 
-- A timeline-ban látható képkockákat a szerkesztés menüben, a képkockákon jobb klikkel, vagy gyorsbillentyűkkel lehet manipulálni (új képkockát beszúrni, duplikálni, törölni, stb.). Egy képkocka 100 milliszekundum időtartamot jelent, 10 képkocka 1 másodpercnyi animációt. 
+- A timeline-on látható képkockákat a szerkesztés menüben, a képkockákon jobb klikkel, vagy gyorsbillentyűkkel lehet manipulálni (új képkockát beszúrni, duplikálni, törölni, stb.). Egy képkocka 100 milliszekundum időtartamot jelent, 10 képkocka 1 másodpercnyi animációt. 

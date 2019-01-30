@@ -20,6 +20,7 @@ LAYOUTS		= {
 		"layer-color"		: "#000000",
 		"layer-outline"		: "#444444",
 		"layer-outline-highlight": "#ffffff",
+		"layer-waveform"	: "#aaaadd",
 		"layer-offset"		: 30,
 		"layer-height"		: 40,
 		"layer-width"		: 200,

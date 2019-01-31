@@ -477,7 +477,7 @@ class Application(tk.Frame):
         if redraw:
             self.timeline_frames.delete("all")
             if self.waveform:
-                self.timeline_frames.create_image(0, int(LAYOUTS[self.skin]["layer-offset"]/2), image=self.waveform)
+                self.timeline_frames.create_image(int((LAYOUTS[self.skin]["frame-width"] * (1000 / self.animation["stage"]["speed"]) * self.audio.duration())/2), int(LAYOUTS[self.skin]["layer-offset"]/2), image=self.waveform)
 
             for j in range(len(self.animation["timeline"])):
                 workaround = self.animation["timeline"][j]["frames"][
@@ -2386,6 +2386,7 @@ class Application(tk.Frame):
     # load audio file, alert if file is not found
     def music_load(self):
         if self.audio:
+            self.waveform = None
             self.audio.destroy()
             self.audio = None
         if self.animation["properties"]["music"]:
@@ -2396,19 +2397,18 @@ class Application(tk.Frame):
                     file = self.animation["properties"]["music"].replace("/", "\\").split("\\")[-1]
                     self.properties_menu.entryconfigure(3, label="Zene: " + file)
                     out, err = self.audio.waveform(WAVEFORM, {
-                        "width": LAYOUTS[self.skin]["frame-width"] * 10 * self.audio.duration(),
-                        "height": LAYOUTS[self.skin]["layer-offset"] * 2,
+                        "width": int(LAYOUTS[self.skin]["frame-width"] * (1000 / self.animation["stage"]["speed"]) * self.audio.duration()),
+                        "height": int(LAYOUTS[self.skin]["layer-offset"] * 2),
                         "foreground": LAYOUTS[self.skin]["layer-waveform"],
                         "background": LAYOUTS[self.skin]["layer"]
                     })
                     try:
                         self.waveform = tk.PhotoImage(
-                            file=WAVEFORM,
-                            width=int(LAYOUTS[self.skin]["frame-width"] * 10 * self.audio.duration()),
-                            height=int(LAYOUTS[self.skin]["layer-offset"]))
+                            file= WAVEFORM,
+                            width= int(LAYOUTS[self.skin]["frame-width"] * (1000 / self.animation["stage"]["speed"]) * self.audio.duration()),
+                            height= int(LAYOUTS[self.skin]["layer-offset"]))
                     except tk.TclError as ep:
                         pass
-                    self.render_frames(True)
                     self.loading(False)
                 except:
                     self.error("FFMPEG hiba!",
@@ -2422,6 +2422,7 @@ class Application(tk.Frame):
                 self.properties_menu.entryconfigure(3, label="Zene nem található: " + file)
         else:
             self.properties_menu.entryconfigure(3, label="Zene betöltése")
+        self.render_frames(True)
 
     # disable certain functions while loading, and change cursor if wait cursor is available in system
     def loading(self, update=True):
@@ -2496,6 +2497,7 @@ class Application(tk.Frame):
                 if from_start:
                     self.animation["properties"]["selected_frame"] = end
                 self.render(True)
+                self.playback_pause()
                 return
             current = time.time()
             if timestamp < (current - speed):
@@ -2513,12 +2515,18 @@ class Application(tk.Frame):
                 self.root.update()
 
                 if self.audio is not None:
-                    if not self.audio.is_playing:
-                        self.audio.play()
-                    current = self.audio.current()*1000
-                    if current < (self.animation["properties"]["selected_frame"] - 3) * self.animation["stage"]["speed"] or current > (self.animation["properties"]["selected_frame"] + 2) * self.animation["stage"]["speed"]:
+                    audio_current = self.audio.current() * 1000
+                    audio_duration = self.audio.duration() * 1000
+                    if audio_duration > self.animation["properties"]["selected_frame"] * self.animation["stage"]["speed"]:
+                        if not self.audio.is_playing:
+                            self.music(True)
+                    else:
+                        if self.audio.is_playing:
+                            self.music(False)
+                    if audio_current < (self.animation["properties"]["selected_frame"] - 3) * self.animation["stage"]["speed"] or audio_current > (self.animation["properties"]["selected_frame"] + 2) * self.animation["stage"]["speed"]:
                         fix = (self.animation["properties"]["selected_frame"]+.5) * self.animation["stage"]["speed"]
                         self.audio.seek(fix/1000)
+
 
             time.sleep(int(speed / 20))
 

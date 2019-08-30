@@ -28,8 +28,8 @@ from libs.mp3 import *
 
 TITLE = "QPY"  # name for window title
 HEADER = "QPY"  # file headers
-NAME = "QPY Animáció Szerkesztő"  # software name
-VERSION = "0.1.10 alfa"  # version number
+NAME = "QPY Animáció Szerkesztő 2019"  # software name
+VERSION = "0.2.0 beta"  # version number
 URL = "https://github.com/sedthh/schonherz-matrix"  # GitHub URL
 WAVEFORM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "wave.png")   # waveform generated
 
@@ -2397,22 +2397,22 @@ class Application(tk.Frame):
                     file = self.animation["properties"]["music"].replace("/", "\\").split("\\")[-1]
                     self.properties_menu.entryconfigure(3, label="Zene: " + file)
                     out, err = self.audio.waveform(WAVEFORM, {
-                        "width": int(LAYOUTS[self.skin]["frame-width"] * (1000 / self.animation["stage"]["speed"]) * self.audio.duration()),
+                        "width": int(LAYOUTS[self.skin]["frame-width"] * (1000. / self.animation["stage"]["speed"]) * self.audio.duration()),
                         "height": int(LAYOUTS[self.skin]["layer-offset"] * 2),
                         "foreground": LAYOUTS[self.skin]["layer-waveform"],
                         "background": LAYOUTS[self.skin]["layer"]
                     })
                     try:
                         self.waveform = tk.PhotoImage(
-                            file= WAVEFORM,
-                            width= int(LAYOUTS[self.skin]["frame-width"] * (1000 / self.animation["stage"]["speed"]) * self.audio.duration()),
-                            height= int(LAYOUTS[self.skin]["layer-offset"]))
+                            file=WAVEFORM,
+                            width=int(LAYOUTS[self.skin]["frame-width"] * (1000. / self.animation["stage"]["speed"]) * self.audio.duration()),
+                            height=int(LAYOUTS[self.skin]["layer-offset"]))
                     except tk.TclError as ep:
                         pass
                     self.loading(False)
-                except:
-                    self.error("FFMPEG hiba!",
-                               "Nem sikerült betölteni a hangfájlt, az FFMPEG és/vagy FFPLAY nem található.")
+                except Exception as e:
+                    self.error("VLC hiba!",
+                               "Nem sikerült betölteni a hangfájlt, a VLC dll hiba miatt.")
                     file = self.animation["properties"]["music"].replace("/", "\\").split("\\")[-1]
                     self.properties_menu.entryconfigure(3, label="Zene nem található: " + file)
             else:
@@ -2652,7 +2652,7 @@ class Application(tk.Frame):
 
 
 if __name__ == "__main__":
-    # if editor is started from command line, note the user not to close it
+    # if editor is started from command line, notify the user not to close it
     print("Ha ezt az ablakot bezárod, az alkalmazás is bezáródik!")
     app = Application(master=tk.Tk())
     app.mainloop()

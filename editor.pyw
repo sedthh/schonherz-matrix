@@ -29,7 +29,7 @@ from libs.mp3 import *
 TITLE = "QPY"  # name for window title
 HEADER = "QPY"  # file headers
 NAME = "QPY Animáció Szerkesztő 2019"  # software name
-VERSION = "0.2.0 beta"  # version number
+VERSION = "1.0.0 beta"  # version number
 URL = "https://github.com/sedthh/schonherz-matrix"  # GitHub URL
 WAVEFORM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "wave.png")   # waveform generated
 
@@ -854,7 +854,7 @@ class Application(tk.Frame):
                         2] > self.version[2]:
                         # TODO: auto update
                         messagebox.showinfo("Eltérő verziók!",
-                                            "Ez az animáció egy újabb verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
+                                            "Ez az animáció egy eltérő verziójú szerkesztőben lett létrehozva!\nElőfordulhat, hogy az animáció nem megfelelően fog megjelenni.")
                     self.loading_progress(75)
                     self.animation = self.json_fix(data)
                     ### add variables for backward compatiblity

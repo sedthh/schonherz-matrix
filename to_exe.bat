@@ -5,5 +5,5 @@ xcopy /s /i "images" "dist\editor\images\"
 xcopy /s /i "plugins" "dist\editor\plugins\"
 xcopy "_libvlc.dll" "dist\editor\libvlc.dll"
 xcopy "_libvlccore.dll" "dist\editor\libvlccore.dll"
-xcopy "_ffmpeg.exe" "dist\editor\ffmpeg.exe"
+xcopy "ffmpeg.exe" "dist\editor\ffmpeg.exe"
 pause

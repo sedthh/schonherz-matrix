@@ -29,7 +29,7 @@ from libs.mp3 import *
 TITLE = "QPY"  # name for window title
 HEADER = "QPY"  # file headers
 NAME = "QPY Animáció Szerkesztő 2019"  # software name
-VERSION = "1.0.0 beta"  # version number
+VERSION = "1.0.1"  # version number
 URL = "https://github.com/sedthh/schonherz-matrix"  # GitHub URL
 WAVEFORM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "wave.png")   # waveform generated
 
@@ -1250,34 +1250,50 @@ class Application(tk.Frame):
 
     # rotate 90 deg right
     def transform_rotate_right(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         self.rotate(True)
 
     # rotate 90 deg left
     def transform_rotate_left(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         self.rotate(False)
 
     # flip horizontally
     def transform_flip_horizontal(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         self.flip(True)
 
     # flip vertically
     def transform_flip_vertical(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         self.flip(False)
 
     # move all selected pixels one pixel up
     def transform_move_up(self, event=None, double=None):
+        if self.is_playing or self.is_loading:
+            return
         self.move(0, -1 * self.animation["stage"]["shift"] if double else -1)
 
     # move all selected pixels one pixeldown
     def transform_move_down(self, event=None, double=None):
+        if self.is_playing or self.is_loading:
+            return
         self.move(0, self.animation["stage"]["shift"] if double else 1)
 
     # move all selected pixels one pixel left
     def transform_move_left(self, event=None, double=None):
+        if self.is_playing or self.is_loading:
+            return
         self.move(-1 * self.animation["stage"]["shift"] if double else -1, 0)
 
     # move all selected pixels one pixel right
     def transform_move_right(self, event=None, double=None):
+        if self.is_playing or self.is_loading:
+            return
         self.move(self.animation["stage"]["shift"] if double else 1, 0)
 
     ### PLAYBACK FUNCTIONS
@@ -1332,6 +1348,8 @@ class Application(tk.Frame):
 
     # jump to beginning of animation
     def playback_rewind(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         if self.block_hotkeys:
             return
         self.animation["properties"]["selected_frame"] = 0
@@ -1339,6 +1357,8 @@ class Application(tk.Frame):
 
     # jump to end of animation
     def playback_end(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         if self.block_hotkeys:
             return
         self.playback_pause()
@@ -1347,6 +1367,8 @@ class Application(tk.Frame):
 
     # jump to next keyframe	in layer
     def playback_back(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         if self.block_hotkeys:
             return
         self.animation["properties"]["selected_frame"] = self.get_prev()
@@ -1354,6 +1376,8 @@ class Application(tk.Frame):
 
     # jump to previous keyframe in layer
     def playback_next(self, event=None):
+        if self.is_playing or self.is_loading:
+            return
         if self.block_hotkeys:
             return
         self.animation["properties"]["selected_frame"] = self.get_next()
@@ -2489,7 +2513,13 @@ class Application(tk.Frame):
         start = 0 if from_start else self.animation["properties"]["selected_frame"]
         end = self.animation["properties"]["selected_frame"] if from_start else length
         start_time = start * speed
-        # self.stage_preview.delete(self.building)
+        try:
+            # self.stage_preview.delete(self.building)
+            self.timeline_frames.delete(self.timeline_frames_select)
+            self.timeline_frames.delete(self.timeline_frames_select_line)
+            self.timeline_frames.delete(self.timeline_frames_select_frame)
+        except AttributeError:
+            pass
         if from_start:
             self.animation["properties"]["selected_frame"] = 0
         while True:

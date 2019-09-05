@@ -16,12 +16,14 @@ class FFMP3:
             self.stop()
 
     def waveform(self, output, design):
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         terminal = f'ffmpeg -y -i "{self.file}" ' \
             f'-hide_banner -loglevel panic ' \
             f'-filter_complex "aformat=channel_layouts=mono, compand=gain=-5, ' \
             f'showwavespic=s={int(design["width"])}x{int(design["height"])}:'\
             f'colors={design["foreground"]}|{design["background"]}" -vframes 1 {output}'
-        pipe = subprocess.Popen(terminal, stdout=subprocess.PIPE)
+        pipe = subprocess.Popen(terminal, stdout=subprocess.PIPE, shell=False, creationflags=subprocess.CREATE_NO_WINDOW, startupinfo=si)
         return pipe.communicate()  # out, err
 
     def destroy(self):

@@ -14,7 +14,7 @@ A **QPY** egy LED fal animáció szerkesztő alkalmazás, amely a [Schönherz QP
 
 <h1 align="center"><a href="https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip"> >>> Windows letöltéshez kattints ide (editor.exe) <<< </a></h1>
 
-Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip)** és csomagold ki a **qpy.zip** fájlt. A benne lévő **editor.exe** megnyitásával indul a szerkesztő. Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra. 
+Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip)** és csomagold ki a **qpy.zip** fájlt. A benne lévő **qpy.exe** megnyitásával indul a szerkesztő. Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra! 
 
 **VAGY** 
 
@@ -59,6 +59,6 @@ A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animác
 
 - A zenelejátszáshoz az alkalmazás a FFMPEG-et és VLC-t használ. A futtatásukhoz szükséges fájlok benne vannak a qpy.zip fájlban. 
 
-- A lefordított verzió azért áll olyan sok fájlból és azért olyan nagy méretű, mert minden lehetséges függőséget becsomagol a pyinstaller. 
+- A lefordított verzió azért áll olyan sok fájlból és azért olyan nagy méretű, mert minden lehetséges függőséget becsomagol a Pyinstaller. 
 
 - Ha esetleg idén is tetriszt, snake-et, pohárból elfogyó sört vagy scrollozó csapatnevet akarnál rakni az animációdba, kérd meg egy másik csapattársadat, hogy készítsen helyetted animációt.

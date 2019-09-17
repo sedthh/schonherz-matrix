@@ -12,7 +12,7 @@ A **QPY** egy LED fal animáció szerkesztő alkalmazás, amely a [Schönherz QP
 	
 ## Installálás
 
-<h1 align="center"><a href="https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip"> >>> Windows letöltéshez kattints ide (editor.exe) <<< </a></h1>
+<h1 align="center"><a href="https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip"> >>> Windows letöltéshez kattints ide <<< </a></h1>
 
 Windows alatt **[töltsd le a szerkesztőt](https://github.com/sedthh/schonherz-matrix/raw/master/qpy.zip)** és csomagold ki a **qpy.zip** fájlt. A benne lévő **qpy.exe** megnyitásával indul a szerkesztő. Ha a Windows defender nem akarja engedni a futtatást, kattints a (további információ alatt) "Futtatás mindenképpen" gombra! 
 

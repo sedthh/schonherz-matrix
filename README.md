@@ -49,9 +49,9 @@ Az eszköztár eszközeinek segítségével a színpadra és az előnézeti abla
 
 
 ## Exportálás
-A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt **qp4** formátumra. Az exportálás után létrejövő fájl már megnyitható az eddig használt *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztőben is. 
+A QPA FTP-re való feltöltéshez először **exportálni** kell a kész animációt **qp4** formátumra. Ezt a formátumot [a rendezők elfogadják](https://www.facebook.com/events/2261586927223918/permalink/2331332626916014/). **Animáció feltöltéskor ne felejtsétek el mellékelni az MP3 fájlt is!**
 
-**Animáció feltöltéskor ne felejtsétek el mellékelni az MP3 fájlt is!**
+Az exportálás után létrejövő fájl megnyitható a régi *[AnimEditor2012](https://oriaskijelzo.sch.bme.hu/wp-content/uploads/2018/06/animeditor_2012_win32.zip)* szerkesztőben is és vissza is importálható egyetlen sávként. 
 
 ## FAQ
 
